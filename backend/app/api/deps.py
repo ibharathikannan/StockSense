@@ -13,6 +13,7 @@ from app.core.permissions import ADMIN_ROLE, effective_permissions
 from app.core.security import decode_access_token
 from app.repositories.roles import RolesRepository
 from app.repositories.users import UsersRepository
+from app.services.users import UserService
 
 bearer_scheme = HTTPBearer(auto_error=False)
 
@@ -27,6 +28,13 @@ def get_users_repo(db: AsyncDatabase = Depends(get_db)) -> UsersRepository:
 
 def get_roles_repo(db: AsyncDatabase = Depends(get_db)) -> RolesRepository:
     return RolesRepository(db)
+
+
+def get_user_service(
+    users: UsersRepository = Depends(get_users_repo),
+    roles: RolesRepository = Depends(get_roles_repo),
+) -> UserService:
+    return UserService(users, roles)
 
 
 @dataclass

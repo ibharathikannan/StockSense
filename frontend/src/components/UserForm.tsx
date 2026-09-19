@@ -3,10 +3,12 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Alert, Button, Card, Field, Input, LinkButton, PageLoader, Select } from "@/components/ui";
-import { api, errorMessage } from "@/lib/api";
+import { errorMessage } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { useFetch } from "@/lib/hooks";
 import type { RoleOption, User } from "@/lib/types";
+import { rolesService } from "@/services/roles";
+import { usersService } from "@/services/users";
 
 /**
  * Create (no `userId`) or edit (`userId`) a user — one form for both, like
@@ -14,8 +16,8 @@ import type { RoleOption, User } from "@/lib/types";
  * be initialised straight from the loaded user.
  */
 export function UserForm({ userId }: { userId?: string }) {
-  const user = useFetch<User>(userId ? `/api/users/${userId}` : null);
-  const roles = useFetch<RoleOption[]>("/api/roles/options");
+  const user = useFetch(userId ? ["user", userId] : null, () => usersService.get(userId!));
+  const roles = useFetch(["role-options"], () => rolesService.options());
 
   const error = user.error ?? roles.error;
   if (error) return <Alert>{error.status === 404 ? "User not found." : error.message}</Alert>;
@@ -43,18 +45,15 @@ function Form({ existing, roles }: { existing?: User; roles: RoleOption[] }) {
     setSaving(true);
     try {
       if (editing) {
-        await api(`/api/users/${existing.id}`, {
-          method: "PATCH",
-          body: {
-            full_name: fullName,
-            // The API rejects self role/status changes, so don't send them.
-            ...(isSelf ? {} : { role, is_active: isActive }),
-            ...(password ? { password } : {}),
-          },
+        await usersService.update(existing.id, {
+          full_name: fullName,
+          // The API rejects self role/status changes, so don't send them.
+          ...(isSelf ? {} : { role, is_active: isActive }),
+          ...(password ? { password } : {}),
         });
         if (isSelf) await refresh(); // header shows your own name
       } else {
-        await api("/api/users", { method: "POST", body: { full_name: fullName, email, password, role, is_active: isActive } });
+        await usersService.create({ full_name: fullName, email, password, role, is_active: isActive });
       }
       router.push("/users");
     } catch (err) {

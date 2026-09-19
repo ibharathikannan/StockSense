@@ -4,7 +4,8 @@ import Link from "next/link";
 import { Card, Badge, PageHeader } from "@/components/ui";
 import { useAuth } from "@/lib/auth";
 import { useFetch } from "@/lib/hooks";
-import type { Page, Role, User } from "@/lib/types";
+import { rolesService } from "@/services/roles";
+import { usersService } from "@/services/users";
 
 function Stat({ label, value, href }: { label: string; value: number | undefined; href: string }) {
   return (
@@ -20,8 +21,8 @@ function Stat({ label, value, href }: { label: string; value: number | undefined
 export default function DashboardPage() {
   const { user, can } = useAuth();
   // Only ask for what this user is allowed to see.
-  const users = useFetch<Page<User>>(can("users:read") ? "/api/users?page_size=1" : null);
-  const roles = useFetch<Page<Role>>(can("roles:read") ? "/api/roles?page_size=1" : null);
+  const users = useFetch(can("users:read") ? ["users", "count"] : null, () => usersService.list({ pageSize: 1 }));
+  const roles = useFetch(can("roles:read") ? ["roles", "count"] : null, () => rolesService.list({ pageSize: 1 }));
 
   return (
     <>

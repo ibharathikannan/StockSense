@@ -3,14 +3,15 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Alert, Button, Card, Field, Input, LinkButton, PageLoader } from "@/components/ui";
-import { api, errorMessage } from "@/lib/api";
+import { errorMessage } from "@/lib/api";
 import { useFetch } from "@/lib/hooks";
 import type { Permission, Role } from "@/lib/types";
+import { rolesService } from "@/services/roles";
 
 /** Create (no `roleName`) or edit a role. Permission checkboxes come from the backend catalogue. */
 export function RoleForm({ roleName }: { roleName?: string }) {
-  const role = useFetch<Role>(roleName ? `/api/roles/${roleName}` : null);
-  const catalogue = useFetch<Permission[]>("/api/roles/permissions");
+  const role = useFetch(roleName ? ["role", roleName] : null, () => rolesService.get(roleName!));
+  const catalogue = useFetch(["permissions"], () => rolesService.permissions());
 
   const error = role.error ?? catalogue.error;
   if (error) return <Alert>{error.status === 404 ? "Role not found." : error.message}</Alert>;
@@ -50,15 +51,12 @@ function Form({ existing, catalogue }: { existing?: Role; catalogue: Permission[
     setSaving(true);
     try {
       if (editing) {
-        await api(`/api/roles/${existing.name}`, {
-          method: "PATCH",
-          body: { description: description || null, ...(locked ? {} : { permissions: [...selected] }) },
+        await rolesService.update(existing.name, {
+          description: description || null,
+          ...(locked ? {} : { permissions: [...selected] }),
         });
       } else {
-        await api("/api/roles", {
-          method: "POST",
-          body: { name, description: description || null, permissions: [...selected] },
-        });
+        await rolesService.create({ name, description: description || null, permissions: [...selected] });
       }
       router.push("/roles");
     } catch (err) {

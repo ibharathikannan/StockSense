@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import { Alert, Badge, Button, Card, Field, Input, PageHeader } from "@/components/ui";
-import { api, errorMessage } from "@/lib/api";
+import { errorMessage } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { formatDateTime } from "@/lib/format";
+import { authService } from "@/services/auth";
 
 export default function ProfilePage() {
   const { user } = useAuth();
@@ -22,10 +23,7 @@ export default function ProfilePage() {
     if (next !== confirm) return setError("The new passwords don't match.");
     setSaving(true);
     try {
-      await api("/api/auth/change-password", {
-        method: "POST",
-        body: { current_password: current, new_password: next },
-      });
+      await authService.changePassword(current, next);
       setCurrent("");
       setNext("");
       setConfirm("");

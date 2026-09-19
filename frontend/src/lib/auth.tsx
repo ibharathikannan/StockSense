@@ -1,8 +1,9 @@
 "use client";
 
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
-import { api, onUnauthorized } from "@/lib/api";
-import type { CurrentUser, LoginResponse } from "@/lib/types";
+import { onUnauthorized } from "@/lib/api";
+import type { CurrentUser } from "@/lib/types";
+import { authService } from "@/services/auth";
 
 interface AuthState {
   user: CurrentUser | null;
@@ -24,7 +25,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const refresh = useCallback(async () => {
     try {
-      setUser(await api<CurrentUser>("/api/auth/me", { expectUnauthorized: true }));
+      setUser(await authService.me());
     } catch {
       setUser(null);
     }
@@ -33,7 +34,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Who am I? (the browser sends the session cookie; 401 just means "signed out")
   useEffect(() => {
     let active = true;
-    api<CurrentUser>("/api/auth/me", { expectUnauthorized: true })
+    authService
+      .me()
       .then((me) => active && setUser(me))
       .catch(() => {})
       .finally(() => active && setLoading(false));
@@ -49,18 +51,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const login = useCallback(async (email: string, password: string) => {
-    const res = await api<LoginResponse>("/api/auth/login", {
-      method: "POST",
-      body: { email, password },
-      expectUnauthorized: true,
-    });
+    const res = await authService.login(email, password);
     setUser(res.user);
     return res.user;
   }, []);
 
   const logout = useCallback(async () => {
     try {
-      await api("/api/auth/logout", { method: "POST", expectUnauthorized: true });
+      await authService.logout();
     } finally {
       // Hard navigation: drops all in-memory state and can't race the
       // "session expired" redirect in the app layout.

@@ -1,35 +1,46 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { api, ApiError } from "@/lib/api";
+import { useEffect, useRef, useState } from "react";
+import type { ApiError } from "@/lib/api";
 
 /**
- * GET `path` and keep the result in state. Pass `null` to skip the request.
- * While a new path/reload is in flight, `data` keeps showing the previous
- * result (no flicker when paging) and `loading` is true.
+ * Run a service call and keep the result in state.
+ *
+ *   const users = useFetch(["users", page, q], () => usersService.list({ page, q }));
+ *
+ * `key` identifies the request: the call re-runs whenever it changes (put every
+ * value the fetcher depends on in it). Pass `null` to skip the request. While a
+ * new key/reload is in flight, `data` keeps showing the previous result (no
+ * flicker when paging) and `loading` is true.
  */
-export function useFetch<T>(path: string | null) {
+export function useFetch<T>(key: readonly unknown[] | null, fetcher: () => Promise<T>) {
   const [nonce, setNonce] = useState(0);
-  const key = path ? `${nonce}:${path}` : null;
+  const requestKey = key ? `${nonce}:${JSON.stringify(key)}` : null;
   const [result, setResult] = useState<{ key: string; data?: T; error?: ApiError } | null>(null);
 
+  // Always call the latest fetcher without making it an effect dependency.
+  const fetcherRef = useRef(fetcher);
   useEffect(() => {
-    if (!key || !path) return;
+    fetcherRef.current = fetcher;
+  });
+
+  useEffect(() => {
+    if (!requestKey) return;
     let cancelled = false;
-    api<T>(path).then(
-      (data) => !cancelled && setResult({ key, data }),
-      (error) => !cancelled && setResult({ key, error }),
+    fetcherRef.current().then(
+      (data) => !cancelled && setResult({ key: requestKey, data }),
+      (error: ApiError) => !cancelled && setResult({ key: requestKey, error }),
     );
     return () => {
       cancelled = true;
     };
-  }, [key, path]);
+  }, [requestKey]);
 
-  const settled = result?.key === key ? result : null;
+  const settled = result?.key === requestKey ? result : null;
   return {
     data: result?.data,
     error: settled?.error,
-    loading: key !== null && !settled,
+    loading: requestKey !== null && !settled,
     reload: () => setNonce((n) => n + 1),
   };
 }

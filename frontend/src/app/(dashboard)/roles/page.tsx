@@ -7,15 +7,16 @@ import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { Pagination } from "@/components/Pagination";
 import { RequirePermission } from "@/components/RequirePermission";
 import { Alert, Badge, Card, LinkButton, PageHeader, TableSkeleton, Table, Td, Th } from "@/components/ui";
-import { api, errorMessage } from "@/lib/api";
+import { errorMessage } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { useFetch } from "@/lib/hooks";
-import type { Page, Role } from "@/lib/types";
+import type { Role } from "@/lib/types";
+import { rolesService } from "@/services/roles";
 
 function RolesTable() {
   const { can } = useAuth();
   const [page, setPage] = useState(1);
-  const { data, error, loading, reload } = useFetch<Page<Role>>(`/api/roles?page=${page}&page_size=10`);
+  const { data, error, loading, reload } = useFetch(["roles", page], () => rolesService.list({ page }));
   const [toDelete, setToDelete] = useState<Role | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -25,7 +26,7 @@ function RolesTable() {
     setDeleting(true);
     setDeleteError(null);
     try {
-      await api(`/api/roles/${toDelete.name}`, { method: "DELETE" });
+      await rolesService.remove(toDelete.name);
       setToDelete(null);
       if (data && data.items.length === 1 && page > 1) setPage(page - 1);
       else reload();

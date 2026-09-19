@@ -7,21 +7,20 @@ import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { Pagination } from "@/components/Pagination";
 import { RequirePermission } from "@/components/RequirePermission";
 import { Alert, Badge, Card, Input, LinkButton, PageHeader, TableSkeleton, Table, Td, Th } from "@/components/ui";
-import { api, errorMessage } from "@/lib/api";
+import { errorMessage } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { formatDateTime } from "@/lib/format";
 import { useDebounced, useFetch } from "@/lib/hooks";
-import type { Page, User } from "@/lib/types";
+import type { User } from "@/lib/types";
+import { usersService } from "@/services/users";
 
 function UsersTable() {
   const { user: me, can } = useAuth();
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState("");
   const q = useDebounced(search.trim());
-  const params = new URLSearchParams({ page: String(page), page_size: "10" });
-  if (q) params.set("q", q);
 
-  const { data, error, loading, reload } = useFetch<Page<User>>(`/api/users?${params}`);
+  const { data, error, loading, reload } = useFetch(["users", page, q], () => usersService.list({ page, q }));
   const [toDelete, setToDelete] = useState<User | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
@@ -31,7 +30,7 @@ function UsersTable() {
     setDeleting(true);
     setDeleteError(null);
     try {
-      await api(`/api/users/${toDelete.id}`, { method: "DELETE" });
+      await usersService.remove(toDelete.id);
       setToDelete(null);
       // Deleting the last row of the last page would leave an empty page.
       if (data && data.items.length === 1 && page > 1) setPage(page - 1);
