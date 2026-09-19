@@ -1,6 +1,6 @@
 """Integration tests run against a real MongoDB (default: mongodb://localhost:27017,
 override with TEST_MONGO_URI) using a throw-away database that is dropped around
-every test. Start one with:  docker compose up -d mongo   (from the repo root)
+every test. Point TEST_MONGO_URI at your MongoDB (see README).
 """
 
 from __future__ import annotations

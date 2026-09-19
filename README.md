@@ -178,3 +178,36 @@ They never touch `MONGO_DB_NAME`, but do use a dedicated Atlas cluster/user if y
 | Startup warning "nobody can sign in" | The `users` collection is empty and `FIRST_ADMIN_EMAIL` / `FIRST_ADMIN_PASSWORD` are not set |
 | Forgot the admin password | In Atlas (*Browse Collections*) delete the documents in `users`, then restart the backend — the first admin is created again |
 | Port 8000 or 3000 already in use | Stop the other process, or start uvicorn with a different `--port` and set `BACKEND_URL` |
+
+---
+
+## Deploy to Azure (Web App for Containers)
+
+Production runs as **one container** built from the root `Dockerfile` (Next.js on port 3000, proxying `/api/*` to FastAPI inside the same container). It uses the same MongoDB Atlas database.
+
+| | |
+| --- | --- |
+| URL | <https://stocksense-g13.azurewebsites.net> |
+| Web App / resource group | `stocksense-g13` / `mlprojectdocker` (shared Linux B1 plan, Japan East) |
+| Image | `mlprojectdocker.azurecr.io/stocksense:latest` |
+| Web App settings | `MONGO_URI`, `MONGO_DB_NAME`, `JWT_SECRET_KEY` (separate from local), `ENVIRONMENT=production`, `COOKIE_SECURE=true`, `WEBSITES_PORT=3000` |
+
+**Deploy a new version**
+
+```bash
+az acr login -n mlprojectdocker
+docker build -t mlprojectdocker.azurecr.io/stocksense:latest .
+docker push mlprojectdocker.azurecr.io/stocksense:latest
+```
+
+The ACR webhook `stocksense` restarts the Web App on every push of `stocksense:latest`, so nothing else is needed. The same happens automatically from GitHub Actions (`.github/workflows/cicd.yaml`) on push to `main`, once the repository secrets `ACR_USERNAME` and `ACR_PASSWORD` are set (ACR → *Access keys*).
+
+Useful commands:
+
+```bash
+az webapp log tail -g mlprojectdocker -n stocksense-g13     # live logs
+az webapp restart  -g mlprojectdocker -n stocksense-g13
+az webapp config appsettings list -g mlprojectdocker -n stocksense-g13 --query "[].name"
+```
+
+Atlas must allow the Web App's outbound IPs (*Network Access*); `0.0.0.0/0` works for development.

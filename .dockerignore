@@ -1,0 +1,14 @@
+# Never bake secrets or local artifacts into an image.
+**/.env
+**/.env.*
+!**/.env.example
+**/node_modules
+**/.venv
+**/.next
+**/__pycache__
+**/.pytest_cache
+.git
+.github
+.claude
+backend/tests
+README.md
