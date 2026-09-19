@@ -1,0 +1,59 @@
+@import "tailwindcss";
+
+/* Theme tokens — restyle the whole app by changing these. */
+@theme {
+  --color-brand-50: #eff6ff;
+  --color-brand-100: #dbeafe;
+  --color-brand-500: #2563eb;
+  --color-brand-600: #1d4ed8;
+  --color-brand-700: #1e40af;
+
+  --color-sidebar: #0b1f3a;
+  --color-sidebar-hover: #132e52;
+  --color-sidebar-active: #1a3d6b;
+
+  /* Market colours: use for price/percentage changes and up/down indicators. */
+  --color-gain: #059669;
+  --color-loss: #dc2626;
+
+  --color-surface: #ffffff;
+  --color-canvas: #f3f6fb;
+  --color-line: #e3e8ef;
+  --color-ink: #16202f;
+  --color-muted: #64748b;
+
+  --animate-fade-in: fade-in 0.2s ease-out both;
+  --animate-fade-in-up: fade-in-up 0.25s ease-out both;
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+  @keyframes fade-in-up {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  background: var(--color-canvas);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+}
