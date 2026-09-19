@@ -39,6 +39,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         openapi_url=None if settings.is_production else "/openapi.json",
     )
 
+    # Routes read settings through Depends(get_settings); make them see the same
+    # instance this app was built with (matters when create_app(custom_settings) is used, e.g. in tests).
+    app.dependency_overrides[get_settings] = lambda: settings
+
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origin_list,

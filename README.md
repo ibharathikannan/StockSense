@@ -19,6 +19,7 @@ The database is **MongoDB Atlas** (cloud) — nothing to install locally.
 
 - The administrator is created automatically on first start from `FIRST_ADMIN_EMAIL` / `FIRST_ADMIN_PASSWORD` in `backend/.env`. If you changed those, or already changed the password in *My profile*, use your own values.
 - The normal user was added manually to the Atlas database; it isn't created automatically on a fresh database. Create more users as the admin under **Users → New user**.
+- Anyone can also create their own normal-user account at **/register** (link on the login page). Turn this off with `ALLOW_REGISTRATION=false` in `backend/.env`.
 - These are development credentials — change the passwords (*My profile*) or delete the accounts before sharing or deploying.
 
 ---
@@ -128,6 +129,7 @@ Open <http://localhost:3000> and sign in with the default login above.
 | `JWT_SECRET_KEY` | sample value | **Required, ≥ 32 chars.** Use your own |
 | `JWT_EXPIRE_MINUTES` | `60` | Session length |
 | `FIRST_ADMIN_EMAIL` / `FIRST_ADMIN_PASSWORD` / `FIRST_ADMIN_NAME` | `admin@example.com` / `ChangeMe123!` / `Administrator` | Only used when the `users` collection is empty |
+| `ALLOW_REGISTRATION` | `true` | Public sign-up at `/register`; `false` = only admins create users |
 | `COOKIE_SECURE` | `false` | `true` when served over HTTPS |
 | `ENVIRONMENT` | `development` | `production` hides `/docs` and rejects the sample JWT secret |
 | `CORS_ORIGINS` | `http://localhost:3000` | Only if a browser calls the API directly |

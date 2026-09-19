@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+from fastapi.testclient import TestClient
+
+from app.core.config import Settings
+from app.main import create_app
 from conftest import ADMIN_EMAIL, ADMIN_PASSWORD, login, make_user
 
 
@@ -67,3 +71,38 @@ def test_change_password(client, admin):
     assert ok.status_code == 204
     assert client.post("/api/auth/login", json={"email": "carol@example.com", "password": "Passw0rd!x"}).status_code == 401
     login(client, "carol@example.com", "NewPassw0rd!")
+
+
+REGISTER_BODY = {"email": "New@Example.com", "full_name": "New Person", "password": "Passw0rd!x"}
+
+
+def test_register_creates_normal_user_and_signs_in(client):
+    res = client.post("/api/auth/register", json=REGISTER_BODY)
+    assert res.status_code == 201
+    user = res.json()["user"]
+    assert user["email"] == "new@example.com" and user["role"] == "user" and user["permissions"] == []
+    assert client.get("/api/auth/me").status_code == 200  # the cookie from register works
+
+
+def test_register_ignores_a_client_supplied_role(client):
+    res = client.post("/api/auth/register", json={**REGISTER_BODY, "role": "admin"})
+    assert res.status_code == 201 and res.json()["user"]["role"] == "user"
+
+
+def test_register_rejects_duplicate_email_and_weak_password(client):
+    assert client.post("/api/auth/register", json=REGISTER_BODY).status_code == 201
+    assert client.post("/api/auth/register", json=REGISTER_BODY).status_code == 409
+    weak = {**REGISTER_BODY, "email": "x@example.com", "password": "short"}
+    assert client.post("/api/auth/register", json=weak).status_code == 422
+
+
+def test_registered_user_can_sign_in_again_and_has_no_admin_access(client):
+    client.post("/api/auth/register", json=REGISTER_BODY)
+    client.post("/api/auth/logout")
+    headers = login(client, "new@example.com", "Passw0rd!x")
+    assert client.get("/api/users", headers=headers).status_code == 403
+
+
+def test_register_can_be_disabled(client):
+    with TestClient(create_app(Settings(allow_registration=False))) as closed:
+        assert closed.post("/api/auth/register", json=REGISTER_BODY).status_code == 403

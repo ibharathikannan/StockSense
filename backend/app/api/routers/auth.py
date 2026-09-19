@@ -3,20 +3,40 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 from starlette.concurrency import run_in_threadpool
 
-from app.api.deps import Principal, get_current_principal, get_roles_repo, get_users_repo
+from app.api.deps import Principal, get_current_principal, get_roles_repo, get_user_service, get_users_repo
 from app.core.config import Settings, get_settings
-from app.core.permissions import effective_permissions
+from app.core.permissions import DEFAULT_ROLE, effective_permissions
 from app.core.security import create_access_token, hash_password, verify_password
 from app.repositories.roles import RolesRepository
 from app.repositories.users import UsersRepository
-from app.schemas.auth import ChangePasswordRequest, LoginRequest, TokenResponse
+from app.schemas.auth import ChangePasswordRequest, LoginRequest, RegisterRequest, TokenResponse
 from app.schemas.user import CurrentUser, UserOut
+from app.services.users import UserService
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
 
 def _current_user(user: dict, permissions: set[str]) -> CurrentUser:
     return CurrentUser(**UserOut.from_doc(user).model_dump(), permissions=sorted(permissions))
+
+
+async def _start_session(
+    user: dict, response: Response, settings: Settings, roles: RolesRepository
+) -> TokenResponse:
+    """Issue the JWT + httpOnly cookie for `user` (shared by login and register)."""
+    token = create_access_token(str(user["_id"]), settings)
+    max_age = settings.jwt_expire_minutes * 60
+    response.set_cookie(
+        settings.cookie_name,
+        token,
+        max_age=max_age,
+        httponly=True,
+        secure=settings.cookie_secure,
+        samesite=settings.cookie_samesite,
+        path="/",
+    )
+    permissions = effective_permissions(await roles.get(user["role"]))
+    return TokenResponse(access_token=token, expires_in=max_age, user=_current_user(user, permissions))
 
 
 @router.post("/login", response_model=TokenResponse)
@@ -37,19 +57,31 @@ async def login(
         raise HTTPException(status.HTTP_403_FORBIDDEN, detail="Account is disabled")
 
     await users.touch_last_login(user["_id"])
-    token = create_access_token(str(user["_id"]), settings)
-    max_age = settings.jwt_expire_minutes * 60
-    response.set_cookie(
-        settings.cookie_name,
-        token,
-        max_age=max_age,
-        httponly=True,
-        secure=settings.cookie_secure,
-        samesite=settings.cookie_samesite,
-        path="/",
+    return await _start_session(user, response, settings, roles)
+
+
+@router.post("/register", response_model=TokenResponse, status_code=status.HTTP_201_CREATED)
+async def register(
+    payload: RegisterRequest,
+    response: Response,
+    settings: Settings = Depends(get_settings),
+    service: UserService = Depends(get_user_service),
+    users: UsersRepository = Depends(get_users_repo),
+    roles: RolesRepository = Depends(get_roles_repo),
+) -> TokenResponse:
+    """Public self-signup: creates a normal user (never a role chosen by the client) and signs them in."""
+    if not settings.allow_registration:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, detail="Self-registration is disabled")
+
+    # The service hashes the password, and a duplicate email comes back as a 409.
+    user = await service.create(
+        email=payload.email,
+        full_name=payload.full_name,
+        password=payload.password,
+        role=DEFAULT_ROLE,
     )
-    permissions = effective_permissions(await roles.get(user["role"]))
-    return TokenResponse(access_token=token, expires_in=max_age, user=_current_user(user, permissions))
+    await users.touch_last_login(user["_id"])
+    return await _start_session(user, response, settings, roles)
 
 
 @router.post("/logout", status_code=status.HTTP_204_NO_CONTENT)

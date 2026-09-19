@@ -10,6 +10,8 @@ interface AuthState {
   /** True until the first GET /api/auth/me has answered. */
   loading: boolean;
   login: (email: string, password: string) => Promise<CurrentUser>;
+  /** Create a normal-user account and sign in as it. */
+  register: (fullName: string, email: string, password: string) => Promise<CurrentUser>;
   logout: () => Promise<void>;
   /** Re-read the current user (e.g. after editing your own profile). */
   refresh: () => Promise<void>;
@@ -56,6 +58,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return res.user;
   }, []);
 
+  const register = useCallback(async (fullName: string, email: string, password: string) => {
+    const res = await authService.register(fullName, email, password);
+    setUser(res.user);
+    return res.user;
+  }, []);
+
   const logout = useCallback(async () => {
     try {
       await authService.logout();
@@ -72,11 +80,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       user,
       loading,
       login,
+      register,
       logout,
       refresh,
       can: (permission) => !!user?.permissions.includes(permission),
     }),
-    [user, loading, login, logout, refresh],
+    [user, loading, login, register, logout, refresh],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -7,6 +7,13 @@ export const authService = {
   login: (email: string, password: string) =>
     api<LoginResponse>("/api/auth/login", { method: "POST", body: { email, password }, expectUnauthorized: true }),
 
+  register: (fullName: string, email: string, password: string) =>
+    api<LoginResponse>("/api/auth/register", {
+      method: "POST",
+      body: { full_name: fullName, email, password },
+      expectUnauthorized: true,
+    }),
+
   me: () => api<CurrentUser>("/api/auth/me", { expectUnauthorized: true }),
 
   logout: () => api("/api/auth/logout", { method: "POST", expectUnauthorized: true }),

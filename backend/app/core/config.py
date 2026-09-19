@@ -30,6 +30,9 @@ class Settings(BaseSettings):
     first_admin_password: str = ""
     first_admin_name: str = "Administrator"
 
+    # Public self-signup at POST /api/auth/register. Set false so only admins can create users.
+    allow_registration: bool = True
+
     api_host: str = "0.0.0.0"
     api_port: int = 8000
     cors_origins: str = "http://localhost:3000"
