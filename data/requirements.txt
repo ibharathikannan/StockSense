@@ -1,0 +1,6 @@
+# Reproducible dependencies for the offline market-data pipeline.
+certifi==2026.2.25
+numpy==2.5.2
+pandas==3.0.6
+pyarrow==25.0.1
+yfinance==1.7.0

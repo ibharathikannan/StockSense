@@ -10,6 +10,10 @@ Setup guide for running the project locally.
 
 The database is **MongoDB Atlas** (cloud) — nothing to install locally.
 
+Historical market-data collection is kept separate from the web application's
+runtime dependencies. See [`data/README.md`](data/README.md) to download the
+five-year daily price dataset used by the forecasting pipeline.
+
 ## Login accounts
 
 | Account | Email | Password | Role | Can do |
