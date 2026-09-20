@@ -5,14 +5,16 @@ Setup guide for running the project locally.
 ```
 .
 ├── backend/     FastAPI API (Python)      → http://localhost:8000
-└── frontend/    Next.js web app           → http://localhost:3000
+├── frontend/    Next.js web app           → http://localhost:3000
+└── data/        Market-data pipeline
 ```
 
 The database is **MongoDB Atlas** (cloud) — nothing to install locally.
 
 Historical market-data collection is kept separate from the web application's
-runtime dependencies. See [`data/README.md`](data/README.md) to download the
-five-year daily price dataset used by the forecasting pipeline.
+runtime dependencies. See [`data/README.md`](data/README.md) for the price
+downloads and forecasting features, and [section 4](#4-recommender-data-the-assets-collection)
+below for the asset catalogue the recommender reads from MongoDB.
 
 ## Login accounts
 
@@ -122,6 +124,96 @@ Open <http://localhost:3000> and sign in with the default login above.
 
 ---
 
+## 4. Recommender data: the `assets` collection
+
+The content-based recommender reads a MongoDB **`assets`** collection: one document per
+recommendable stock or ETF (90 today: 80 stocks and 10 ETFs; `^VIX` is context only and is
+skipped). Each document holds the metadata from `data/asset_universe.csv` (name, type,
+category, sector, themes, eligibility flags) plus risk numbers calculated from the daily
+prices over the latest year: volatility, beta against SPY, worst drawdown, dividend yield,
+and a 0-1 volatility rank.
+
+It is built by two scripts, in this order:
+
+| Script | What it does |
+| --- | --- |
+| `data/build_asset_profiles.py` | Computes the risk numbers and writes `data/processed/asset_profiles.json` (needs `pandas` + `pyarrow`) |
+| `backend/scripts/import_assets.py` | Loads that JSON into MongoDB, matching on ticker, so it is safe to re-run |
+
+**First-time load.** `asset_profiles.json` is included in the repository, so a fresh setup
+only needs the import (backend venv active, `backend/.env` configured):
+
+```bash
+cd backend
+python -m scripts.import_assets
+```
+
+**Refresh after the data changes** (from the repository root):
+
+```bash
+python3 data/download_historical_prices.py     # 1. new prices (needs yfinance: data/requirements.txt)
+python3 data/build_asset_profiles.py           # 2. rebuild the JSON
+cd backend && python -m scripts.import_assets  # 3. update MongoDB
+```
+
+| What changed | Run |
+| --- | --- |
+| New prices (`raw/historical_prices.parquet`) | steps 2 and 3 (step 1 first if you have to download them) |
+| `asset_universe.csv` (ticker added or edited) | steps 1, 2 and 3 |
+| MongoDB copy lost or wrong | step 3 only |
+
+The running site reads MongoDB directly, so no redeploy is needed after a refresh.
+
+### How `asset_profiles.json` is created
+
+`build_asset_profiles.py` reads `data/asset_universe.csv` (metadata: `themes` such as `a|b|c`
+become a list, eligibility flags become booleans, `^VIX` is skipped) and
+`data/raw/historical_prices.parquet` (daily prices). The risk numbers cover each asset's latest
+**252 trading days** (about one year) and use adjusted close prices, so splits and dividends do
+not create false jumps:
+
+| Field | Calculation | Meaning |
+| --- | --- | --- |
+| `volatility_1y` | standard deviation of daily returns x sqrt(252) | how much the price swings (0.13 = calm, 0.80 = very volatile) |
+| `beta` | covariance of the asset's and SPY's daily returns / variance of SPY | sensitivity to the market (1.0 = moves with it) |
+| `max_drawdown_1y` | worst fall from a running high, as a negative fraction | the biggest loss endured in the window |
+| `dividend_yield` | dividends paid in the window / latest close | trailing income yield |
+| `volatility_rank` | share of all assets with volatility at or below this one (0-1) | 0 = calmest asset, 1 = most volatile |
+| `history_days` | number of daily returns in the window | how much data the numbers rest on |
+
+Assets with fewer than 60 days of history get `null` risk features. `as_of` records the latest
+price date used. One resulting document (NVDA):
+
+```json
+{
+  "ticker": "NVDA", "name": "NVIDIA Corporation", "asset_type": "stock",
+  "category": "AI chips and hardware", "sector": "Information Technology",
+  "themes": ["artificial_intelligence", "semiconductors", "gpu", "data_centres"],
+  "recommendation_eligible": true, "forecast_eligible": true, "history_note": null,
+  "as_of": "2026-09-18",
+  "risk": {
+    "volatility_1y": 0.381541, "beta": 1.927985, "max_drawdown_1y": -0.202144,
+    "dividend_yield": 0.002339, "history_days": 252, "volatility_rank": 0.6333
+  }
+}
+```
+
+**Check that it worked.** The build script prints how many profiles it wrote (90) and the
+latest price date; the import prints how many documents were inserted and updated. Every
+document's `as_of` should equal the latest trading day.
+
+**Limitations**
+- Removed tickers are not deleted: if you remove one from `asset_universe.csv`, its document
+  stays in MongoDB until you delete it manually.
+- It is a snapshot of the past year as of `as_of`, so refresh it regularly.
+- One-year beta is noisy (some defensive stocks show a negative beta). Treat `volatility_1y` as
+  the main risk signal and `beta` as secondary.
+- `FPS` has under a year of history, so its numbers are less reliable (see its `history_days`).
+- Do not load `forecast_features.parquet` or the raw price file into MongoDB. They are inputs for
+  calculations and model training; only the results are stored in the database.
+
+---
+
 ## Configuration
 
 ### `backend/.env`
@@ -206,7 +298,9 @@ docker build -t mlprojectdocker.azurecr.io/stocksense:latest .
 docker push mlprojectdocker.azurecr.io/stocksense:latest
 ```
 
-The ACR webhook `stocksense` restarts the Web App on every push of `stocksense:latest`, so nothing else is needed. The same happens automatically from GitHub Actions (`.github/workflows/cicd.yaml`) on push to `main`, once the repository secrets `ACR_USERNAME` and `ACR_PASSWORD` are set (ACR → *Access keys*).
+GitHub Actions (`.github/workflows/cicd.yaml`) builds and pushes the same image on every push to `main`, once the repository secrets `ACR_USERNAME` and `ACR_PASSWORD` are set (ACR → *Access keys*).
+
+**After a push, restart the Web App** so it pulls the new image: `az webapp restart -g mlprojectdocker -n stocksense-g13`. An ACR webhook named `stocksense` exists to do this automatically, but it currently fails with 401 because basic-auth publishing is disabled on the Web App. Enabling it (`basicPublishingCredentialsPolicies/scm`) would make the webhook work.
 
 Useful commands:
 
@@ -217,3 +311,27 @@ az webapp config appsettings list -g mlprojectdocker -n stocksense-g13 --query "
 ```
 
 Atlas must allow the Web App's outbound IPs (*Network Access*); `0.0.0.0/0` works for development.
+
+---
+
+## Project status and team notes (2026-09-20)
+
+**Done**
+- Web app base: FastAPI + Next.js + MongoDB Atlas with login, self-registration (`/register`), users, roles and permissions. Access is enforced by the API on every request, and the frontend only hides what a user cannot use.
+- Deployed to Azure as a single container (see above).
+- Recommender asset catalogue (`assets` collection, section 4) built from the data pipeline.
+
+**Please**
+- Do not change `data/asset_universe.csv` without telling the group: it feeds both the forecasting models and the recommender.
+- Keep the large data files out of MongoDB (see section 4).
+- Change or remove the demo passwords under *Login accounts* before this repository is shared beyond the team.
+
+**Decisions needed**
+- **Onboarding mockup vs. the data.** The mockup has "Real Estate" and "Clean Energy" interest chips, but there are no real-estate assets and only a few clean-energy ones (FSLR, NEE, GRID). Drop or rename the chips, or add tickers?
+- **Category data.** XOM and CVX sit under "AI power energy and grid", and AAPL under "AI chips and hardware". Correct them?
+- **Macro data.** `raw/macro_indicators` has not been downloaded (it needs a FRED API key). Who owns it?
+
+**Next**
+1. Onboarding profile: a `profiles` collection, an API, and the four-step onboarding page from the mockups.
+2. Content-based recommender: related and diversifying assets, each with reasons.
+3. Discover page.
