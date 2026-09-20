@@ -8,6 +8,7 @@ from starlette.concurrency import run_in_threadpool
 
 from app.core.permissions import ADMIN_ROLE
 from app.core.security import hash_password
+from app.repositories.profiles import ProfilesRepository
 from app.repositories.roles import RolesRepository
 from app.repositories.users import UsersRepository
 from app.services.errors import BadRequest, Conflict, Forbidden, NotFound
@@ -21,9 +22,10 @@ class UserService:
     acting user's id/admin flag as plain values — no dependency on the HTTP layer.
     """
 
-    def __init__(self, users: UsersRepository, roles: RolesRepository) -> None:
+    def __init__(self, users: UsersRepository, roles: RolesRepository, profiles: ProfilesRepository) -> None:
         self._users = users
         self._roles = roles
+        self._profiles = profiles
 
     # ---- reads -------------------------------------------------------------
 
@@ -109,6 +111,7 @@ class UserService:
             raise Forbidden("Only administrators can delete administrators")
         await self._assert_not_last_admin(target)
         await self._users.delete(user_id)
+        await self._profiles.delete_for_user(target["_id"])  # don't leave an orphaned profile
 
     # ---- rules -------------------------------------------------------------
 

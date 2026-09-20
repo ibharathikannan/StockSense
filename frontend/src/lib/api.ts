@@ -46,10 +46,13 @@ interface RequestOptions {
   /** Endpoints where a 401 is an expected answer (login, initial /me) — don't trigger global logout. */
   expectUnauthorized?: boolean;
   signal?: AbortSignal;
+  /** Don't show the global loading overlay for this request (type-ahead searches). */
+  silent?: boolean;
 }
 
 export async function api<T = void>(path: string, opts: RequestOptions = {}): Promise<T> {
-  beginActivity(); // drives the global top progress bar
+  if (opts.silent) return request<T>(path, opts);
+  beginActivity(); // drives the global loading overlay
   try {
     return await request<T>(path, opts);
   } finally {

@@ -50,3 +50,44 @@ export interface LoginResponse {
   expires_in: number;
   user: CurrentUser;
 }
+
+export interface RiskLevelOption {
+  key: string;
+  label: string;
+  description: string;
+}
+
+export interface InterestOption {
+  key: string;
+  label: string;
+  /** Recommendable assets behind this interest. */
+  asset_count: number;
+}
+
+export interface AssetTypeOption {
+  key: string;
+  label: string;
+}
+
+export interface ProfileOptions {
+  risk_levels: RiskLevelOption[];
+  interests: InterestOption[];
+  asset_types: AssetTypeOption[];
+  max_followed: number;
+}
+
+export interface Profile {
+  risk_level: string;
+  interests: string[];
+  asset_types: string;
+  followed_tickers: string[];
+  completed_at: string;
+  updated_at: string;
+}
+
+export interface AssetSummary {
+  ticker: string;
+  name: string;
+  asset_type: string;
+  sector: string;
+}

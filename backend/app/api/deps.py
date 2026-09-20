@@ -11,8 +11,11 @@ from pymongo.asynchronous.database import AsyncDatabase
 from app.core.config import Settings, get_settings
 from app.core.permissions import ADMIN_ROLE, effective_permissions
 from app.core.security import decode_access_token
+from app.repositories.assets import AssetsRepository
+from app.repositories.profiles import ProfilesRepository
 from app.repositories.roles import RolesRepository
 from app.repositories.users import UsersRepository
+from app.services.profiles import ProfileService
 from app.services.users import UserService
 
 bearer_scheme = HTTPBearer(auto_error=False)
@@ -30,11 +33,27 @@ def get_roles_repo(db: AsyncDatabase = Depends(get_db)) -> RolesRepository:
     return RolesRepository(db)
 
 
+def get_assets_repo(db: AsyncDatabase = Depends(get_db)) -> AssetsRepository:
+    return AssetsRepository(db)
+
+
+def get_profiles_repo(db: AsyncDatabase = Depends(get_db)) -> ProfilesRepository:
+    return ProfilesRepository(db)
+
+
 def get_user_service(
     users: UsersRepository = Depends(get_users_repo),
     roles: RolesRepository = Depends(get_roles_repo),
+    profiles: ProfilesRepository = Depends(get_profiles_repo),
 ) -> UserService:
-    return UserService(users, roles)
+    return UserService(users, roles, profiles)
+
+
+def get_profile_service(
+    profiles: ProfilesRepository = Depends(get_profiles_repo),
+    assets: AssetsRepository = Depends(get_assets_repo),
+) -> ProfileService:
+    return ProfileService(profiles, assets)
 
 
 @dataclass

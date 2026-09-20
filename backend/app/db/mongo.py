@@ -21,6 +21,7 @@ async def ensure_indexes(db: AsyncDatabase) -> None:
     await db["users"].create_index("email", unique=True)
     await db["roles"].create_index("name", unique=True)
     await db["assets"].create_index("ticker", unique=True)
+    await db["profiles"].create_index("user_id", unique=True)
 
 
 def to_object_id(value: str) -> ObjectId | None:
