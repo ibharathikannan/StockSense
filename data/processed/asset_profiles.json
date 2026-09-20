@@ -1,0 +1,2168 @@
+[
+  {
+    "ticker": "NVDA",
+    "name": "NVIDIA Corporation",
+    "asset_type": "stock",
+    "category": "AI chips and hardware",
+    "sector": "Information Technology",
+    "themes": [
+      "artificial_intelligence",
+      "semiconductors",
+      "gpu",
+      "data_centres"
+    ],
+    "recommendation_eligible": true,
+    "forecast_eligible": true,
+    "history_note": null,
+    "as_of": "2026-09-18",
+    "risk": {
+      "volatility_1y": 0.381541,
+      "beta": 1.927985,
+      "max_drawdown_1y": -0.202144,
+      "dividend_yield": 0.002339,
+      "history_days": 252,
+      "volatility_rank": 0.6333
+    }
+  },
+  {
+    "ticker": "AMD",
+    "name": "Advanced Micro Devices, Inc.",
+    "asset_type": "stock",
+    "category": "AI chips and hardware",
+    "sector": "Information Technology",
+    "themes": [
+      "artificial_intelligence",
+      "semiconductors",
+      "cpu",
+      "gpu"
+    ],
+    "recommendation_eligible": true,
+    "forecast_eligible": true,
+    "history_note": null,
+    "as_of": "2026-09-18",
+    "risk": {
+      "volatility_1y": 0.715605,
+      "beta": 3.148062,
+      "max_drawdown_1y": -0.277608,
+      "dividend_yield": 0.0,
+      "history_days": 252,
+      "volatility_rank": 0.9556
+    }
+  },
+  {
+    "ticker": "AVGO",
+    "name": "Broadcom Inc.",
+    "asset_type": "stock",
+    "category": "AI chips and hardware",
+    "sector": "Information Technology",
+    "themes": [
+      "artificial_intelligence",
+      "semiconductors",
+      "networking"
+    ],
+    "recommendation_eligible": true,
+    "forecast_eligible": true,
+    "history_note": null,
+    "as_of": "2026-09-18",
+    "risk": {
+      "volatility_1y": 0.46403,
+      "beta": 2.16428,
+      "max_drawdown_1y": -0.294377,
+      "dividend_yield": 0.007103,
+      "history_days": 252,
+      "volatility_rank": 0.7333
+    }
+  },
+  {
+    "ticker": "QCOM",
+    "name": "Qualcomm Incorporated",
+    "asset_type": "stock",
+    "category": "AI chips and hardware",
+    "sector": "Information Technology",
+    "themes": [
+      "semiconductors",
+      "edge_ai",
+      "wireless"
+    ],
+    "recommendation_eligible": true,
+    "forecast_eligible": true,
+    "history_note": null,
+    "as_of": "2026-09-18",
+    "risk": {
+      "volatility_1y": 0.527842,
+      "beta": 2.030307,
+      "max_drawdown_1y": -0.409787,
+      "dividend_yield": 0.020369,
+      "history_days": 252,
+      "volatility_rank": 0.8333
+    }
+  },
+  {
+    "ticker": "MU",
+    "name": "Micron Technology, Inc.",
+    "asset_type": "stock",
+    "category": "AI chips and hardware",
+    "sector": "Information Technology",
+    "themes": [
+      "semiconductors",
+      "memory",
+      "data_centres"
+    ],
+    "recommendation_eligible": true,
+    "forecast_eligible": true,
+    "history_note": null,
+    "as_of": "2026-09-18",
+    "risk": {
+      "volatility_1y": 0.794533,
+      "beta": 3.292098,
+      "max_drawdown_1y": -0.390954,
+      "dividend_yield": 0.000522,
+      "history_days": 252,
+      "volatility_rank": 0.9778
+    }
+  },
+  {
+    "ticker": "TSM",
+    "name": "Taiwan Semiconductor Manufacturing Company Limited",
+    "asset_type": "stock",
+    "category": "AI chips and hardware",
+    "sector": "Information Technology",
+    "themes": [
+      "semiconductors",
+      "foundry",
+      "chip_manufacturing"
+    ],
+    "recommendation_eligible": true,
+    "forecast_eligible": true,
+    "history_note": "US-listed ADR",
+    "as_of": "2026-09-18",
+    "risk": {
+      "volatility_1y": 0.403755,
+      "beta": 2.189638,
+      "max_drawdown_1y": -0.215466,
+      "dividend_yield": 0.008864,
+      "history_days": 252,
+      "volatility_rank": 0.6778
+    }
+  },
+  {
+    "ticker": "AMAT",
+    "name": "Applied Materials, Inc.",
+    "asset_type": "stock",
+    "category": "AI chips and hardware",
+    "sector": "Information Technology",
+    "themes": [
+      "semiconductors",
+      "chip_equipment",
+      "manufacturing"
+    ],
+    "recommendation_eligible": true,
+    "forecast_eligible": true,
+    "history_note": null,
+    "as_of": "2026-09-18",
+    "risk": {
+      "volatility_1y": 0.598788,
+      "beta": 2.734526,
+      "max_drawdown_1y": -0.424863,
+      "dividend_yield": 0.004454,
+      "history_days": 252,
+      "volatility_rank": 0.9
+    }
+  },
+  {
+    "ticker": "ASML",
+    "name": "ASML Holding N.V.",
+    "asset_type": "stock",
+    "category": "AI chips and hardware",
+    "sector": "Information Technology",
+    "themes": [
+      "semiconductors",
+      "lithography",
+      "chip_equipment"
+    ],
+    "recommendation_eligible": true,
+    "forecast_eligible": true,
+    "history_note": "US-listed ADR",
+    "as_of": "2026-09-18",
+    "risk": {
+      "volatility_1y": 0.466798,
+      "beta": 2.271288,
+      "max_drawdown_1y": -0.219531,
+      "dividend_yield": 0.005394,
+      "history_days": 252,
+      "volatility_rank": 0.7444
+    }
+  },
+  {
+    "ticker": "MRVL",
+    "name": "Marvell Technology, Inc.",
+    "asset_type": "stock",
+    "category": "AI chips and hardware",
+    "sector": "Information Technology",
+    "themes": [
+      "artificial_intelligence",
+      "semiconductors",
+      "data_centres",
+      "networking"
+    ],
+    "recommendation_eligible": true,
+    "forecast_eligible": true,
+    "history_note": null,
+    "as_of": "2026-09-18",
+    "risk": {
+      "volatility_1y": 0.792677,
+      "beta": 3.002655,
+      "max_drawdown_1y": -0.483487,
+      "dividend_yield": 0.000983,
+      "history_days": 252,
+      "volatility_rank": 0.9667
+    }
+  },
+  {
+    "ticker": "AAPL",
+    "name": "Apple Inc.",
+    "asset_type": "stock",
+    "category": "AI chips and hardware",
+    "sector": "Information Technology",
+    "themes": [
+      "consumer_technology",
+      "devices",
+      "edge_ai"
+    ],
+    "recommendation_eligible": true,
+    "forecast_eligible": true,
+    "history_note": null,
+    "as_of": "2026-09-18",
+    "risk": {
+      "volatility_1y": 0.249667,
+      "beta": 0.684501,
+      "max_drawdown_1y": -0.137985,
+      "dividend_yield": 0.003154,
+      "history_days": 252,
+      "volatility_rank": 0.2556
+    }
+  },
+  {
+    "ticker": "MSFT",
+    "name": "Microsoft Corporation",
+    "asset_type": "stock",
+    "category": "Software cloud and cybersecurity",
+    "sector": "Information Technology",
+    "themes": [
+      "enterprise_software",
+      "cloud_computing",
+      "generative_ai"
+    ],
+    "recommendation_eligible": true,
+    "forecast_eligible": true,
+    "history_note": null,
+    "as_of": "2026-09-18",
+    "risk": {
+      "volatility_1y": 0.325022,
+      "beta": 0.960489,
+      "max_drawdown_1y": -0.344984,
+      "dividend_yield": 0.007372,
+      "history_days": 252,
+      "volatility_rank": 0.5444
+    }
+  },
+  {
+    "ticker": "ORCL",
+    "name": "Oracle Corporation",
+    "asset_type": "stock",
+    "category": "Software cloud and cybersecurity",
+    "sector": "Information Technology",
+    "themes": [
+      "enterprise_software",
+      "cloud_computing",
+      "databases"
+    ],
+    "recommendation_eligible": true,
+    "forecast_eligible": true,
+    "history_note": null,
+    "as_of": "2026-09-18",
+    "risk": {
+      "volatility_1y": 0.570368,
+      "beta": 2.085533,
+      "max_drawdown_1y": -0.645587,
+      "dividend_yield": 0.013549,
+      "history_days": 252,
+      "volatility_rank": 0.8889
+    }
+  },
+  {
+    "ticker": "CRM",
+    "name": "Salesforce, Inc.",
+    "asset_type": "stock",
+    "category": "Software cloud and cybersecurity",
+    "sector": "Information Technology",
+    "themes": [
+      "enterprise_software",
+      "cloud_computing",
+      "customer_relationship_management"
+    ],
+    "recommendation_eligible": true,
+    "forecast_eligible": true,
+    "history_note": null,
+    "as_of": "2026-09-18",
+    "risk": {
+      "volatility_1y": 0.473934,
+      "beta": 0.484357,
+      "max_drawdown_1y": -0.433257,
+      "dividend_yield": 0.007297,
+      "history_days": 252,
+      "volatility_rank": 0.7667
+    }
+  },
+  {
+    "ticker": "ADBE",
+    "name": "Adobe Inc.",
+    "asset_type": "stock",
+    "category": "Software cloud and cybersecurity",
+    "sector": "Information Technology",
+    "themes": [
+      "enterprise_software",
+      "creative_software",
+      "generative_ai"
+    ],
+    "recommendation_eligible": true,
+    "forecast_eligible": true,
+    "history_note": null,
+    "as_of": "2026-09-18",
+    "risk": {
+      "volatility_1y": 0.405401,
+      "beta": 0.367576,
+      "max_drawdown_1y": -0.473657,
+      "dividend_yield": 0.0,
+      "history_days": 252,
+      "volatility_rank": 0.6889
+    }
+  },
+  {
+    "ticker": "NOW",
+    "name": "ServiceNow, Inc.",
+    "asset_type": "stock",
+    "category": "Software cloud and cybersecurity",
+    "sector": "Information Technology",
+    "themes": [
+      "enterprise_software",
+      "cloud_computing",
+      "workflow_automation"
+    ],
+    "recommendation_eligible": true,
+    "forecast_eligible": true,
+    "history_note": null,
+    "as_of": "2026-09-18",
+    "risk": {
+      "volatility_1y": 0.570159,
+      "beta": 0.655244,
+      "max_drawdown_1y": -0.568226,
+      "dividend_yield": 0.0,
+      "history_days": 252,
+      "volatility_rank": 0.8778
+    }
+  },
+  {
+    "ticker": "PLTR",
+    "name": "Palantir Technologies Inc.",
+    "asset_type": "stock",
+    "category": "Software cloud and cybersecurity",
+    "sector": "Information Technology",
+    "themes": [
+      "artificial_intelligence",
+      "data_analytics",
+      "government_technology"
+    ],
+    "recommendation_eligible": true,
+    "forecast_eligible": true,
+    "history_note": null,
+    "as_of": "2026-09-18",
+    "risk": {
+      "volatility_1y": 0.606915,
+      "beta": 1.971498,
+      "max_drawdown_1y": -0.482238,
+      "dividend_yield": 0.0,
+      "history_days": 252,
+      "volatility_rank": 0.9111
+    }
+  },
+  {
+    "ticker": "CRWD",
+    "name": "CrowdStrike Holdings, Inc.",
+    "asset_type": "stock",
+    "category": "Software cloud and cybersecurity",
+    "sector": "Information Technology",
+    "themes": [
+      "cybersecurity",
+      "cloud_computing",
+      "endpoint_security"
+    ],
+    "recommendation_eligible": true,
+    "forecast_eligible": true,
+    "history_note": null,
+    "as_of": "2026-09-18",
+    "risk": {
+      "volatility_1y": 0.558179,
+      "beta": 1.558087,
+      "max_drawdown_1y": -0.371783,
+      "dividend_yield": 0.0,
+      "history_days": 252,
+      "volatility_rank": 0.8667
+    }
+  },
+  {
+    "ticker": "PANW",
+    "name": "Palo Alto Networks, Inc.",
+    "asset_type": "stock",
+    "category": "Software cloud and cybersecurity",
+    "sector": "Information Technology",
+    "themes": [
+      "cybersecurity",
+      "network_security",
+      "cloud_security"
+    ],
+    "recommendation_eligible": true,
+    "forecast_eligible": true,
+    "history_note": null,
+    "as_of": "2026-09-18",
+    "risk": {
+      "volatility_1y": 0.470603,
+      "beta": 1.264302,
+      "max_drawdown_1y": -0.36006,
+      "dividend_yield": 0.0,
+      "history_days": 252,
+      "volatility_rank": 0.7556
+    }
+  },
+  {
+    "ticker": "SNOW",
+    "name": "Snowflake Inc.",
+    "asset_type": "stock",
+    "category": "Software cloud and cybersecurity",
+    "sector": "Information Technology",
+    "themes": [
+      "cloud_computing",
+      "data_platform",
+      "analytics"
+    ],
+    "recommendation_eligible": true,
+    "forecast_eligible": true,
+    "history_note": null,
+    "as_of": "2026-09-18",
+    "risk": {
+      "volatility_1y": 0.652711,
+      "beta": 1.3346,
+      "max_drawdown_1y": -0.563001,
+      "dividend_yield": 0.0,
+      "history_days": 252,
+      "volatility_rank": 0.9222
+    }
+  },
+  {
+    "ticker": "DDOG",
+    "name": "Datadog, Inc.",
+    "asset_type": "stock",
+    "category": "Software cloud and cybersecurity",
+    "sector": "Information Technology",
+    "themes": [
+      "cloud_computing",
+      "observability",
+      "developer_tools"
+    ],
+    "recommendation_eligible": true,
+    "forecast_eligible": true,
+    "history_note": null,
+    "as_of": "2026-09-18",
+    "risk": {
+      "volatility_1y": 0.6965,
+      "beta": 1.147401,
+      "max_drawdown_1y": -0.486206,
+      "dividend_yield": 0.0,
+      "history_days": 252,
+      "volatility_rank": 0.9444
+    }
+  },
+  {
+    "ticker": "FPS",
+    "name": "Forgent Power Solutions, Inc.",
+    "asset_type": "stock",
+    "category": "AI power energy and grid",
+    "sector": "Industrials",
+    "themes": [
+      "ai_power_demand",
+      "data_centre_power",
+      "electrical_distribution",
+      "grid_infrastructure"
+    ],
+    "recommendation_eligible": true,
+    "forecast_eligible": false,
+    "history_note": "Independent trading history begins in 2026",
+    "as_of": "2026-09-18",
+    "risk": {
+      "volatility_1y": 0.844789,
+      "beta": 3.406119,
+      "max_drawdown_1y": -0.556588,
+      "dividend_yield": 0.0,
+      "history_days": 153,
+      "volatility_rank": 0.9889
+    }
+  },
+  {
+    "ticker": "BE",
+    "name": "Bloom Energy Corporation",
+    "asset_type": "stock",
+    "category": "AI power energy and grid",
+    "sector": "Industrials",
+    "themes": [
+      "ai_power_demand",
+      "fuel_cells",
+      "distributed_power",
+      "data_centres"
+    ],
+    "recommendation_eligible": true,
+    "forecast_eligible": true,
+    "history_note": null,
+    "as_of": "2026-09-18",
+    "risk": {
+      "volatility_1y": 1.146112,
+      "beta": 4.359952,
+      "max_drawdown_1y": -0.526529,
+      "dividend_yield": 0.0,
+      "history_days": 252,
+      "volatility_rank": 1.0
+    }
+  },
+  {
+    "ticker": "CEG",
+    "name": "Constellation Energy Corporation",
+    "asset_type": "stock",
+    "category": "AI power energy and grid",
+    "sector": "Utilities",
+    "themes": [
+      "ai_power_demand",
+      "nuclear_energy",
+      "electricity_generation"
+    ],
+    "recommendation_eligible": true,
+    "forecast_eligible": false,
+    "history_note": "Independent trading history begins in 2022",
+    "as_of": "2026-09-18",
+    "risk": {
+      "volatility_1y": 0.474941,
+      "beta": 1.348518,
+      "max_drawdown_1y": -0.412162,
+      "dividend_yield": 0.006553,
+      "history_days": 252,
+      "volatility_rank": 0.7778
+    }
+  },
+  {
+    "ticker": "VST",
+    "name": "Vistra Corp.",
+    "asset_type": "stock",
+    "category": "AI power energy and grid",
+    "sector": "Utilities",
+    "themes": [
+      "ai_power_demand",
+      "electricity_generation",
+      "nuclear_energy"
+    ],
+    "recommendation_eligible": true,
+    "forecast_eligible": true,
+    "history_note": null,
+    "as_of": "2026-09-18",
+    "risk": {
+      "volatility_1y": 0.487727,
+      "beta": 1.485554,
+      "max_drawdown_1y": -0.380131,
+      "dividend_yield": 0.006469,
+      "history_days": 252,
+      "volatility_rank": 0.8
+    }
+  },
+  {
+    "ticker": "GEV",
+    "name": "GE Vernova Inc.",
+    "asset_type": "stock",
+    "category": "AI power energy and grid",
+    "sector": "Industrials",
+    "themes": [
+      "ai_power_demand",
+      "grid_infrastructure",
+      "power_generation",
+      "electrification"
+    ],
+    "recommendation_eligible": true,
+    "forecast_eligible": false,
+    "history_note": "Independent trading history begins in 2024",
+    "as_of": "2026-09-18",
+    "risk": {
+      "volatility_1y": 0.525955,
+      "beta": 2.034878,
+      "max_drawdown_1y": -0.255435,
+      "dividend_yield": 0.001861,
+      "history_days": 252,
+      "volatility_rank": 0.8222
+    }
+  },
+  {
+    "ticker": "ETN",
+    "name": "Eaton Corporation plc",
+    "asset_type": "stock",
+    "category": "AI power energy and grid",
+    "sector": "Industrials",
+    "themes": [
+      "ai_power_demand",
+      "electrical_equipment",
+      "data_centres"
+    ],
+    "recommendation_eligible": true,
+    "forecast_eligible": true,
+    "history_note": null,
+    "as_of": "2026-09-18",
+    "risk": {
+      "volatility_1y": 0.392289,
+      "beta": 1.780266,
+      "max_drawdown_1y": -0.183257,
+      "dividend_yield": 0.010217,
+      "history_days": 252,
+      "volatility_rank": 0.6444
+    }
+  },
+  {
+    "ticker": "PWR",
+    "name": "Quanta Services, Inc.",
+    "asset_type": "stock",
+    "category": "AI power energy and grid",
+    "sector": "Industrials",
+    "themes": [
+      "grid_infrastructure",
+      "electrification",
+      "utility_infrastructure"
+    ],
+    "recommendation_eligible": true,
+    "forecast_eligible": true,
+    "history_note": null,
+    "as_of": "2026-09-18",
+    "risk": {
+      "volatility_1y": 0.444773,
+      "beta": 1.666602,
+      "max_drawdown_1y": -0.285281,
+      "dividend_yield": 0.000675,
+      "history_days": 252,
+      "volatility_rank": 0.7
+    }
+  },
+  {
+    "ticker": "VRT",
+    "name": "Vertiv Holdings Co",
+    "asset_type": "stock",
+    "category": "AI power energy and grid",
+    "sector": "Industrials",
+    "themes": [
+      "ai_power_demand",
+      "data_centre_infrastructure",
+      "cooling",
+      "power_management"
+    ],
+    "recommendation_eligible": true,
+    "forecast_eligible": true,
+    "history_note": null,
+    "as_of": "2026-09-18",
+    "risk": {
+      "volatility_1y": 0.664305,
+      "beta": 2.79341,
+      "max_drawdown_1y": -0.407048,
+      "dividend_yield": 0.00101,
+      "history_days": 252,
+      "volatility_rank": 0.9333
+    }
+  },
+  {
+    "ticker": "NEE",
+    "name": "NextEra Energy, Inc.",
+    "asset_type": "stock",
+    "category": "AI power energy and grid",
+    "sector": "Utilities",
+    "themes": [
+      "electricity_generation",
+      "renewable_energy",
+      "utilities"
+    ],
+    "recommendation_eligible": true,
+    "forecast_eligible": true,
+    "history_note": null,
+    "as_of": "2026-09-18",
+    "risk": {
+      "volatility_1y": 0.213504,
+      "beta": 0.188937,
+      "max_drawdown_1y": -0.166658,
+      "dividend_yield": 0.030272,
+      "history_days": 252,
+      "volatility_rank": 0.1333
+    }
+  },
+  {
+    "ticker": "FSLR",
+    "name": "First Solar, Inc.",
+    "asset_type": "stock",
+    "category": "AI power energy and grid",
+    "sector": "Information Technology",
+    "themes": [
+      "solar_energy",
+      "renewable_energy",
+      "energy_transition"
+    ],
+    "recommendation_eligible": true,
+    "forecast_eligible": true,
+    "history_note": null,
+    "as_of": "2026-09-18",
+    "risk": {
+      "volatility_1y": 0.534197,
+      "beta": 1.789652,
+      "max_drawdown_1y": -0.399623,
+      "dividend_yield": 0.0,
+      "history_days": 252,
+      "volatility_rank": 0.8444
+    }
+  },
+  {
+    "ticker": "XOM",
+    "name": "Exxon Mobil Corporation",
+    "asset_type": "stock",
+    "category": "AI power energy and grid",
+    "sector": "Energy",
+    "themes": [
+      "oil_and_gas",
+      "integrated_energy",
+      "traditional_energy"
+    ],
+    "recommendation_eligible": true,
+    "forecast_eligible": true,
+    "history_note": null,
+    "as_of": "2026-09-18",
+    "risk": {
+      "volatility_1y": 0.257781,
+      "beta": -0.537286,
+      "max_drawdown_1y": -0.201123,
+      "dividend_yield": 0.025193,
+      "history_days": 252,
+      "volatility_rank": 0.2889
+    }
+  },
+  {
+    "ticker": "CVX",
+    "name": "Chevron Corporation",
+    "asset_type": "stock",
+    "category": "AI power energy and grid",
+    "sector": "Energy",
+    "themes": [
+      "oil_and_gas",
+      "integrated_energy",
+      "traditional_energy"
+    ],
+    "recommendation_eligible": true,
+    "forecast_eligible": true,
+    "history_note": null,
+    "as_of": "2026-09-18",
+    "risk": {
+      "volatility_1y": 0.234743,
+      "beta": -0.474026,
+      "max_drawdown_1y": -0.20811,
+      "dividend_yield": 0.03365,
+      "history_days": 252,
+      "volatility_rank": 0.2333
+    }
+  },
+  {
+    "ticker": "NRG",
+    "name": "NRG Energy, Inc.",
+    "asset_type": "stock",
+    "category": "AI power energy and grid",
+    "sector": "Utilities",
+    "themes": [
+      "ai_power_demand",
+      "electricity_generation",
+      "retail_energy"
+    ],
+    "recommendation_eligible": true,
+    "forecast_eligible": true,
+    "history_note": null,
+    "as_of": "2026-09-18",
+    "risk": {
+      "volatility_1y": 0.484575,
+      "beta": 1.399715,
+      "max_drawdown_1y": -0.432992,
+      "dividend_yield": 0.017992,
+      "history_days": 252,
+      "volatility_rank": 0.7889
+    }
+  },
+  {
+    "ticker": "CCJ",
+    "name": "Cameco Corporation",
+    "asset_type": "stock",
+    "category": "AI power energy and grid",
+    "sector": "Energy",
+    "themes": [
+      "nuclear_energy",
+      "uranium",
+      "ai_power_demand"
+    ],
+    "recommendation_eligible": true,
+    "forecast_eligible": true,
+    "history_note": "US-listed Canadian company",
+    "as_of": "2026-09-18",
+    "risk": {
+      "volatility_1y": 0.554397,
+      "beta": 2.173488,
+      "max_drawdown_1y": -0.369304,
+      "dividend_yield": 0.001877,
+      "history_days": 252,
+      "volatility_rank": 0.8556
+    }
+  },
+  {
+    "ticker": "JNJ",
+    "name": "Johnson & Johnson",
+    "asset_type": "stock",
+    "category": "Healthcare",
+    "sector": "Health Care",
+    "themes": [
+      "pharmaceuticals",
+      "medical_devices",
+      "defensive"
+    ],
+    "recommendation_eligible": true,
+    "forecast_eligible": true,
+    "history_note": null,
+    "as_of": "2026-09-18",
+    "risk": {
+      "volatility_1y": 0.189152,
+      "beta": -0.181512,
+      "max_drawdown_1y": -0.109591,
+      "dividend_yield": 0.019556,
+      "history_days": 252,
+      "volatility_rank": 0.0778
+    }
+  },
+  {
+    "ticker": "UNH",
+    "name": "UnitedHealth Group Incorporated",
+    "asset_type": "stock",
+    "category": "Healthcare",
+    "sector": "Health Care",
+    "themes": [
+      "health_insurance",
+      "health_services",
+      "managed_care"
+    ],
+    "recommendation_eligible": true,
+    "forecast_eligible": true,
+    "history_note": null,
+    "as_of": "2026-09-18",
+    "risk": {
+      "volatility_1y": 0.344231,
+      "beta": 0.43165,
+      "max_drawdown_1y": -0.289607,
+      "dividend_yield": 0.024038,
+      "history_days": 252,
+      "volatility_rank": 0.5778
+    }
+  },
+  {
+    "ticker": "PFE",
+    "name": "Pfizer Inc.",
+    "asset_type": "stock",
+    "category": "Healthcare",
+    "sector": "Health Care",
+    "themes": [
+      "pharmaceuticals",
+      "vaccines",
+      "defensive"
+    ],
+    "recommendation_eligible": true,
+    "forecast_eligible": true,
+    "history_note": null,
+    "as_of": "2026-09-18",
+    "risk": {
+      "volatility_1y": 0.23108,
+      "beta": 0.332372,
+      "max_drawdown_1y": -0.157243,
+      "dividend_yield": 0.062184,
+      "history_days": 252,
+      "volatility_rank": 0.2222
+    }
+  },
+  {
+    "ticker": "LLY",
+    "name": "Eli Lilly and Company",
+    "asset_type": "stock",
+    "category": "Healthcare",
+    "sector": "Health Care",
+    "themes": [
+      "pharmaceuticals",
+      "diabetes",
+      "obesity_treatment"
+    ],
+    "recommendation_eligible": true,
+    "forecast_eligible": true,
+    "history_note": null,
+    "as_of": "2026-09-18",
+    "risk": {
+      "volatility_1y": 0.357502,
+      "beta": 0.305459,
+      "max_drawdown_1y": -0.231823,
+      "dividend_yield": 0.005803,
+      "history_days": 252,
+      "volatility_rank": 0.5889
+    }
+  },
+  {
+    "ticker": "ABBV",
+    "name": "AbbVie Inc.",
+    "asset_type": "stock",
+    "category": "Healthcare",
+    "sector": "Health Care",
+    "themes": [
+      "pharmaceuticals",
+      "biotechnology",
+      "immunology"
+    ],
+    "recommendation_eligible": true,
+    "forecast_eligible": true,
+    "history_note": null,
+    "as_of": "2026-09-18",
+    "risk": {
+      "volatility_1y": 0.262366,
+      "beta": -0.100179,
+      "max_drawdown_1y": -0.173152,
+      "dividend_yield": 0.025875,
+      "history_days": 252,
+      "volatility_rank": 0.3222
+    }
+  },
+  {
+    "ticker": "MRK",
+    "name": "Merck & Co., Inc.",
+    "asset_type": "stock",
+    "category": "Healthcare",
+    "sector": "Health Care",
+    "themes": [
+      "pharmaceuticals",
+      "oncology",
+      "vaccines"
+    ],
+    "recommendation_eligible": true,
+    "forecast_eligible": true,
+    "history_note": null,
+    "as_of": "2026-09-18",
+    "risk": {
+      "volatility_1y": 0.302424,
+      "beta": 0.195772,
+      "max_drawdown_1y": -0.113655,
+      "dividend_yield": 0.02315,
+      "history_days": 252,
+      "volatility_rank": 0.4556
+    }
+  },
+  {
+    "ticker": "TMO",
+    "name": "Thermo Fisher Scientific Inc.",
+    "asset_type": "stock",
+    "category": "Healthcare",
+    "sector": "Health Care",
+    "themes": [
+      "life_sciences",
+      "diagnostics",
+      "research_tools"
+    ],
+    "recommendation_eligible": true,
+    "forecast_eligible": true,
+    "history_note": null,
+    "as_of": "2026-09-18",
+    "risk": {
+      "volatility_1y": 0.305886,
+      "beta": 0.585518,
+      "max_drawdown_1y": -0.313827,
+      "dividend_yield": 0.002824,
+      "history_days": 252,
+      "volatility_rank": 0.4667
+    }
+  },
+  {
+    "ticker": "AMGN",
+    "name": "Amgen Inc.",
+    "asset_type": "stock",
+    "category": "Healthcare",
+    "sector": "Health Care",
+    "themes": [
+      "biotechnology",
+      "pharmaceuticals"
+    ],
+    "recommendation_eligible": true,
+    "forecast_eligible": true,
+    "history_note": null,
+    "as_of": "2026-09-18",
+    "risk": {
+      "volatility_1y": 0.276297,
+      "beta": 0.500924,
+      "max_drawdown_1y": -0.165679,
+      "dividend_yield": 0.025775,
+      "history_days": 252,
+      "volatility_rank": 0.3889
+    }
+  },
+  {
+    "ticker": "ISRG",
+    "name": "Intuitive Surgical, Inc.",
+    "asset_type": "stock",
+    "category": "Healthcare",
+    "sector": "Health Care",
+    "themes": [
+      "medical_devices",
+      "robotic_surgery",
+      "healthcare_technology"
+    ],
+    "recommendation_eligible": true,
+    "forecast_eligible": true,
+    "history_note": null,
+    "as_of": "2026-09-18",
+    "risk": {
+      "volatility_1y": 0.363717,
+      "beta": 0.927826,
+      "max_drawdown_1y": -0.43996,
+      "dividend_yield": 0.0,
+      "history_days": 252,
+      "volatility_rank": 0.6222
+    }
+  },
+  {
+    "ticker": "JPM",
+    "name": "JPMorgan Chase & Co.",
+    "asset_type": "stock",
+    "category": "Financial services",
+    "sector": "Financials",
+    "themes": [
+      "banking",
+      "investment_banking",
+      "payments"
+    ],
+    "recommendation_eligible": true,
+    "forecast_eligible": true,
+    "history_note": null,
+    "as_of": "2026-09-18",
+    "risk": {
+      "volatility_1y": 0.220636,
+      "beta": 0.77454,
+      "max_drawdown_1y": -0.154717,
+      "dividend_yield": 0.017159,
+      "history_days": 252,
+      "volatility_rank": 0.1778
+    }
+  },
+  {
+    "ticker": "BAC",
+    "name": "Bank of America Corporation",
+    "asset_type": "stock",
+    "category": "Financial services",
+    "sector": "Financials",
+    "themes": [
+      "banking",
+      "consumer_finance",
+      "investment_banking"
+    ],
+    "recommendation_eligible": true,
+    "forecast_eligible": true,
+    "history_note": null,
+    "as_of": "2026-09-18",
+    "risk": {
+      "volatility_1y": 0.219497,
+      "beta": 0.714213,
+      "max_drawdown_1y": -0.179317,
+      "dividend_yield": 0.020094,
+      "history_days": 252,
+      "volatility_rank": 0.1556
+    }
+  },
+  {
+    "ticker": "V",
+    "name": "Visa Inc.",
+    "asset_type": "stock",
+    "category": "Financial services",
+    "sector": "Financials",
+    "themes": [
+      "payments",
+      "fintech",
+      "consumer_spending"
+    ],
+    "recommendation_eligible": true,
+    "forecast_eligible": true,
+    "history_note": null,
+    "as_of": "2026-09-18",
+    "risk": {
+      "volatility_1y": 0.220797,
+      "beta": 0.295708,
+      "max_drawdown_1y": -0.171805,
+      "dividend_yield": 0.007277,
+      "history_days": 252,
+      "volatility_rank": 0.1889
+    }
+  },
+  {
+    "ticker": "MA",
+    "name": "Mastercard Incorporated",
+    "asset_type": "stock",
+    "category": "Financial services",
+    "sector": "Financials",
+    "themes": [
+      "payments",
+      "fintech",
+      "consumer_spending"
+    ],
+    "recommendation_eligible": true,
+    "forecast_eligible": true,
+    "history_note": null,
+    "as_of": "2026-09-18",
+    "risk": {
+      "volatility_1y": 0.224081,
+      "beta": 0.291537,
+      "max_drawdown_1y": -0.208703,
+      "dividend_yield": 0.005962,
+      "history_days": 252,
+      "volatility_rank": 0.2111
+    }
+  },
+  {
+    "ticker": "GS",
+    "name": "The Goldman Sachs Group, Inc.",
+    "asset_type": "stock",
+    "category": "Financial services",
+    "sector": "Financials",
+    "themes": [
+      "investment_banking",
+      "asset_management",
+      "capital_markets"
+    ],
+    "recommendation_eligible": true,
+    "forecast_eligible": true,
+    "history_note": null,
+    "as_of": "2026-09-18",
+    "risk": {
+      "volatility_1y": 0.32018,
+      "beta": 1.593607,
+      "max_drawdown_1y": -0.194222,
+      "dividend_yield": 0.019108,
+      "history_days": 252,
+      "volatility_rank": 0.5
+    }
+  },
+  {
+    "ticker": "AXP",
+    "name": "American Express Company",
+    "asset_type": "stock",
+    "category": "Financial services",
+    "sector": "Financials",
+    "themes": [
+      "payments",
+      "credit_cards",
+      "consumer_finance"
+    ],
+    "recommendation_eligible": true,
+    "forecast_eligible": true,
+    "history_note": null,
+    "as_of": "2026-09-18",
+    "risk": {
+      "volatility_1y": 0.268801,
+      "beta": 0.961237,
+      "max_drawdown_1y": -0.238953,
+      "dividend_yield": 0.011362,
+      "history_days": 252,
+      "volatility_rank": 0.3556
+    }
+  },
+  {
+    "ticker": "BLK",
+    "name": "BlackRock, Inc.",
+    "asset_type": "stock",
+    "category": "Financial services",
+    "sector": "Financials",
+    "themes": [
+      "asset_management",
+      "etfs",
+      "financial_technology"
+    ],
+    "recommendation_eligible": true,
+    "forecast_eligible": true,
+    "history_note": null,
+    "as_of": "2026-09-18",
+    "risk": {
+      "volatility_1y": 0.27248,
+      "beta": 1.177999,
+      "max_drawdown_1y": -0.224544,
+      "dividend_yield": 0.020939,
+      "history_days": 252,
+      "volatility_rank": 0.3778
+    }
+  },
+  {
+    "ticker": "MS",
+    "name": "Morgan Stanley",
+    "asset_type": "stock",
+    "category": "Financial services",
+    "sector": "Financials",
+    "themes": [
+      "investment_banking",
+      "wealth_management",
+      "capital_markets"
+    ],
+    "recommendation_eligible": true,
+    "forecast_eligible": true,
+    "history_note": null,
+    "as_of": "2026-09-18",
+    "risk": {
+      "volatility_1y": 0.282519,
+      "beta": 1.392455,
+      "max_drawdown_1y": -0.188302,
+      "dividend_yield": 0.020486,
+      "history_days": 252,
+      "volatility_rank": 0.4111
+    }
+  },
+  {
+    "ticker": "AMZN",
+    "name": "Amazon.com, Inc.",
+    "asset_type": "stock",
+    "category": "Consumer and retail",
+    "sector": "Consumer Discretionary",
+    "themes": [
+      "ecommerce",
+      "cloud_computing",
+      "consumer_spending"
+    ],
+    "recommendation_eligible": true,
+    "forecast_eligible": true,
+    "history_note": null,
+    "as_of": "2026-09-18",
+    "risk": {
+      "volatility_1y": 0.344041,
+      "beta": 1.441389,
+      "max_drawdown_1y": -0.217362,
+      "dividend_yield": 0.0,
+      "history_days": 252,
+      "volatility_rank": 0.5667
+    }
+  },
+  {
+    "ticker": "TSLA",
+    "name": "Tesla, Inc.",
+    "asset_type": "stock",
+    "category": "Consumer and retail",
+    "sector": "Consumer Discretionary",
+    "themes": [
+      "electric_vehicles",
+      "energy_storage",
+      "high_growth"
+    ],
+    "recommendation_eligible": true,
+    "forecast_eligible": true,
+    "history_note": null,
+    "as_of": "2026-09-18",
+    "risk": {
+      "volatility_1y": 0.462579,
+      "beta": 2.244598,
+      "max_drawdown_1y": -0.391035,
+      "dividend_yield": 0.0,
+      "history_days": 252,
+      "volatility_rank": 0.7222
+    }
+  },
+  {
+    "ticker": "WMT",
+    "name": "Walmart Inc.",
+    "asset_type": "stock",
+    "category": "Consumer and retail",
+    "sector": "Consumer Staples",
+    "themes": [
+      "retail",
+      "consumer_staples",
+      "defensive"
+    ],
+    "recommendation_eligible": true,
+    "forecast_eligible": true,
+    "history_note": null,
+    "as_of": "2026-09-18",
+    "risk": {
+      "volatility_1y": 0.258176,
+      "beta": -0.069274,
+      "max_drawdown_1y": -0.233415,
+      "dividend_yield": 0.009173,
+      "history_days": 252,
+      "volatility_rank": 0.3
+    }
+  },
+  {
+    "ticker": "COST",
+    "name": "Costco Wholesale Corporation",
+    "asset_type": "stock",
+    "category": "Consumer and retail",
+    "sector": "Consumer Staples",
+    "themes": [
+      "retail",
+      "consumer_staples",
+      "membership"
+    ],
+    "recommendation_eligible": true,
+    "forecast_eligible": true,
+    "history_note": null,
+    "as_of": "2026-09-18",
+    "risk": {
+      "volatility_1y": 0.197548,
+      "beta": -0.132973,
+      "max_drawdown_1y": -0.181993,
+      "dividend_yield": 0.006188,
+      "history_days": 252,
+      "volatility_rank": 0.1222
+    }
+  },
+  {
+    "ticker": "PG",
+    "name": "The Procter & Gamble Company",
+    "asset_type": "stock",
+    "category": "Consumer and retail",
+    "sector": "Consumer Staples",
+    "themes": [
+      "household_products",
+      "consumer_staples",
+      "defensive"
+    ],
+    "recommendation_eligible": true,
+    "forecast_eligible": true,
+    "history_note": null,
+    "as_of": "2026-09-18",
+    "risk": {
+      "volatility_1y": 0.197464,
+      "beta": -0.043756,
+      "max_drawdown_1y": -0.155229,
+      "dividend_yield": 0.029319,
+      "history_days": 252,
+      "volatility_rank": 0.1111
+    }
+  },
+  {
+    "ticker": "KO",
+    "name": "The Coca-Cola Company",
+    "asset_type": "stock",
+    "category": "Consumer and retail",
+    "sector": "Consumer Staples",
+    "themes": [
+      "beverages",
+      "consumer_staples",
+      "dividends"
+    ],
+    "recommendation_eligible": true,
+    "forecast_eligible": true,
+    "history_note": null,
+    "as_of": "2026-09-18",
+    "risk": {
+      "volatility_1y": 0.186455,
+      "beta": -0.244809,
+      "max_drawdown_1y": -0.078676,
+      "dividend_yield": 0.023796,
+      "history_days": 252,
+      "volatility_rank": 0.0667
+    }
+  },
+  {
+    "ticker": "HD",
+    "name": "The Home Depot, Inc.",
+    "asset_type": "stock",
+    "category": "Consumer and retail",
+    "sector": "Consumer Discretionary",
+    "themes": [
+      "home_improvement",
+      "retail",
+      "housing_cycle"
+    ],
+    "recommendation_eligible": true,
+    "forecast_eligible": true,
+    "history_note": null,
+    "as_of": "2026-09-18",
+    "risk": {
+      "volatility_1y": 0.251759,
+      "beta": 0.697085,
+      "max_drawdown_1y": -0.277963,
+      "dividend_yield": 0.030969,
+      "history_days": 252,
+      "volatility_rank": 0.2667
+    }
+  },
+  {
+    "ticker": "MCD",
+    "name": "McDonald's Corporation",
+    "asset_type": "stock",
+    "category": "Consumer and retail",
+    "sector": "Consumer Discretionary",
+    "themes": [
+      "restaurants",
+      "franchising",
+      "consumer_spending"
+    ],
+    "recommendation_eligible": true,
+    "forecast_eligible": true,
+    "history_note": null,
+    "as_of": "2026-09-18",
+    "risk": {
+      "volatility_1y": 0.185476,
+      "beta": -0.021409,
+      "max_drawdown_1y": -0.257884,
+      "dividend_yield": 0.029971,
+      "history_days": 252,
+      "volatility_rank": 0.0556
+    }
+  },
+  {
+    "ticker": "NKE",
+    "name": "NIKE, Inc.",
+    "asset_type": "stock",
+    "category": "Consumer and retail",
+    "sector": "Consumer Discretionary",
+    "themes": [
+      "apparel",
+      "consumer_brands",
+      "retail"
+    ],
+    "recommendation_eligible": true,
+    "forecast_eligible": true,
+    "history_note": null,
+    "as_of": "2026-09-18",
+    "risk": {
+      "volatility_1y": 0.362407,
+      "beta": 0.708784,
+      "max_drawdown_1y": -0.508102,
+      "dividend_yield": 0.046184,
+      "history_days": 252,
+      "volatility_rank": 0.6
+    }
+  },
+  {
+    "ticker": "SBUX",
+    "name": "Starbucks Corporation",
+    "asset_type": "stock",
+    "category": "Consumer and retail",
+    "sector": "Consumer Discretionary",
+    "themes": [
+      "restaurants",
+      "consumer_brands",
+      "consumer_spending"
+    ],
+    "recommendation_eligible": true,
+    "forecast_eligible": true,
+    "history_note": null,
+    "as_of": "2026-09-18",
+    "risk": {
+      "volatility_1y": 0.27709,
+      "beta": 0.564905,
+      "max_drawdown_1y": -0.14511,
+      "dividend_yield": 0.025879,
+      "history_days": 252,
+      "volatility_rank": 0.4
+    }
+  },
+  {
+    "ticker": "CAT",
+    "name": "Caterpillar Inc.",
+    "asset_type": "stock",
+    "category": "Industrials aerospace and transport",
+    "sector": "Industrials",
+    "themes": [
+      "construction_equipment",
+      "mining",
+      "infrastructure"
+    ],
+    "recommendation_eligible": true,
+    "forecast_eligible": true,
+    "history_note": null,
+    "as_of": "2026-09-18",
+    "risk": {
+      "volatility_1y": 0.398203,
+      "beta": 1.751166,
+      "max_drawdown_1y": -0.266968,
+      "dividend_yield": 0.007614,
+      "history_days": 252,
+      "volatility_rank": 0.6667
+    }
+  },
+  {
+    "ticker": "HON",
+    "name": "Honeywell International Inc.",
+    "asset_type": "stock",
+    "category": "Industrials aerospace and transport",
+    "sector": "Industrials",
+    "themes": [
+      "industrial_automation",
+      "aerospace",
+      "building_technology"
+    ],
+    "recommendation_eligible": true,
+    "forecast_eligible": true,
+    "history_note": null,
+    "as_of": "2026-09-18",
+    "risk": {
+      "volatility_1y": 0.270155,
+      "beta": 0.713989,
+      "max_drawdown_1y": -0.219278,
+      "dividend_yield": 0.021525,
+      "history_days": 252,
+      "volatility_rank": 0.3667
+    }
+  },
+  {
+    "ticker": "UNP",
+    "name": "Union Pacific Corporation",
+    "asset_type": "stock",
+    "category": "Industrials aerospace and transport",
+    "sector": "Industrials",
+    "themes": [
+      "rail_transport",
+      "freight",
+      "economic_activity"
+    ],
+    "recommendation_eligible": true,
+    "forecast_eligible": true,
+    "history_note": null,
+    "as_of": "2026-09-18",
+    "risk": {
+      "volatility_1y": 0.222905,
+      "beta": 0.261565,
+      "max_drawdown_1y": -0.122823,
+      "dividend_yield": 0.019902,
+      "history_days": 252,
+      "volatility_rank": 0.2
+    }
+  },
+  {
+    "ticker": "UPS",
+    "name": "United Parcel Service, Inc.",
+    "asset_type": "stock",
+    "category": "Industrials aerospace and transport",
+    "sector": "Industrials",
+    "themes": [
+      "logistics",
+      "delivery",
+      "economic_activity"
+    ],
+    "recommendation_eligible": true,
+    "forecast_eligible": true,
+    "history_note": null,
+    "as_of": "2026-09-18",
+    "risk": {
+      "volatility_1y": 0.294809,
+      "beta": 0.804307,
+      "max_drawdown_1y": -0.198983,
+      "dividend_yield": 0.066222,
+      "history_days": 252,
+      "volatility_rank": 0.4333
+    }
+  },
+  {
+    "ticker": "BA",
+    "name": "The Boeing Company",
+    "asset_type": "stock",
+    "category": "Industrials aerospace and transport",
+    "sector": "Industrials",
+    "themes": [
+      "commercial_aerospace",
+      "defence",
+      "manufacturing"
+    ],
+    "recommendation_eligible": true,
+    "forecast_eligible": true,
+    "history_note": null,
+    "as_of": "2026-09-18",
+    "risk": {
+      "volatility_1y": 0.337015,
+      "beta": 1.216341,
+      "max_drawdown_1y": -0.249613,
+      "dividend_yield": 0.0,
+      "history_days": 252,
+      "volatility_rank": 0.5556
+    }
+  },
+  {
+    "ticker": "RTX",
+    "name": "RTX Corporation",
+    "asset_type": "stock",
+    "category": "Industrials aerospace and transport",
+    "sector": "Industrials",
+    "themes": [
+      "aerospace",
+      "defence",
+      "aviation"
+    ],
+    "recommendation_eligible": true,
+    "forecast_eligible": true,
+    "history_note": null,
+    "as_of": "2026-09-18",
+    "risk": {
+      "volatility_1y": 0.259905,
+      "beta": 0.346858,
+      "max_drawdown_1y": -0.193156,
+      "dividend_yield": 0.014536,
+      "history_days": 252,
+      "volatility_rank": 0.3111
+    }
+  },
+  {
+    "ticker": "DE",
+    "name": "Deere & Company",
+    "asset_type": "stock",
+    "category": "Industrials aerospace and transport",
+    "sector": "Industrials",
+    "themes": [
+      "agricultural_equipment",
+      "automation",
+      "manufacturing"
+    ],
+    "recommendation_eligible": true,
+    "forecast_eligible": true,
+    "history_note": null,
+    "as_of": "2026-09-18",
+    "risk": {
+      "volatility_1y": 0.320359,
+      "beta": 0.476803,
+      "max_drawdown_1y": -0.19898,
+      "dividend_yield": 0.009474,
+      "history_days": 252,
+      "volatility_rank": 0.5111
+    }
+  },
+  {
+    "ticker": "GOOGL",
+    "name": "Alphabet Inc.",
+    "asset_type": "stock",
+    "category": "Communication and media",
+    "sector": "Communication Services",
+    "themes": [
+      "digital_advertising",
+      "internet_services",
+      "artificial_intelligence"
+    ],
+    "recommendation_eligible": true,
+    "forecast_eligible": true,
+    "history_note": null,
+    "as_of": "2026-09-18",
+    "risk": {
+      "volatility_1y": 0.314053,
+      "beta": 1.34931,
+      "max_drawdown_1y": -0.210472,
+      "dividend_yield": 0.00246,
+      "history_days": 252,
+      "volatility_rank": 0.4778
+    }
+  },
+  {
+    "ticker": "META",
+    "name": "Meta Platforms, Inc.",
+    "asset_type": "stock",
+    "category": "Communication and media",
+    "sector": "Communication Services",
+    "themes": [
+      "social_media",
+      "digital_advertising",
+      "artificial_intelligence"
+    ],
+    "recommendation_eligible": true,
+    "forecast_eligible": true,
+    "history_note": null,
+    "as_of": "2026-09-18",
+    "risk": {
+      "volatility_1y": 0.395599,
+      "beta": 1.366648,
+      "max_drawdown_1y": -0.324634,
+      "dividend_yield": 0.003154,
+      "history_days": 252,
+      "volatility_rank": 0.6556
+    }
+  },
+  {
+    "ticker": "NFLX",
+    "name": "Netflix, Inc.",
+    "asset_type": "stock",
+    "category": "Communication and media",
+    "sector": "Communication Services",
+    "themes": [
+      "streaming",
+      "entertainment",
+      "subscriptions"
+    ],
+    "recommendation_eligible": true,
+    "forecast_eligible": true,
+    "history_note": null,
+    "as_of": "2026-09-18",
+    "risk": {
+      "volatility_1y": 0.363082,
+      "beta": 0.281395,
+      "max_drawdown_1y": -0.455432,
+      "dividend_yield": 0.0,
+      "history_days": 252,
+      "volatility_rank": 0.6111
+    }
+  },
+  {
+    "ticker": "DIS",
+    "name": "The Walt Disney Company",
+    "asset_type": "stock",
+    "category": "Communication and media",
+    "sector": "Communication Services",
+    "themes": [
+      "entertainment",
+      "streaming",
+      "theme_parks"
+    ],
+    "recommendation_eligible": true,
+    "forecast_eligible": true,
+    "history_note": null,
+    "as_of": "2026-09-18",
+    "risk": {
+      "volatility_1y": 0.265905,
+      "beta": 0.635755,
+      "max_drawdown_1y": -0.202451,
+      "dividend_yield": 0.01461,
+      "history_days": 252,
+      "volatility_rank": 0.3333
+    }
+  },
+  {
+    "ticker": "TMUS",
+    "name": "T-Mobile US, Inc.",
+    "asset_type": "stock",
+    "category": "Communication and media",
+    "sector": "Communication Services",
+    "themes": [
+      "telecommunications",
+      "wireless",
+      "subscriptions"
+    ],
+    "recommendation_eligible": true,
+    "forecast_eligible": true,
+    "history_note": null,
+    "as_of": "2026-09-18",
+    "risk": {
+      "volatility_1y": 0.301152,
+      "beta": -0.33091,
+      "max_drawdown_1y": -0.290299,
+      "dividend_yield": 0.02426,
+      "history_days": 252,
+      "volatility_rank": 0.4444
+    }
+  },
+  {
+    "ticker": "CMCSA",
+    "name": "Comcast Corporation",
+    "asset_type": "stock",
+    "category": "Communication and media",
+    "sector": "Communication Services",
+    "themes": [
+      "telecommunications",
+      "media",
+      "broadband"
+    ],
+    "recommendation_eligible": true,
+    "forecast_eligible": true,
+    "history_note": null,
+    "as_of": "2026-09-18",
+    "risk": {
+      "volatility_1y": 0.320725,
+      "beta": 0.132395,
+      "max_drawdown_1y": -0.307974,
+      "dividend_yield": 0.057136,
+      "history_days": 252,
+      "volatility_rank": 0.5222
+    }
+  },
+  {
+    "ticker": "VZ",
+    "name": "Verizon Communications Inc.",
+    "asset_type": "stock",
+    "category": "Communication and media",
+    "sector": "Communication Services",
+    "themes": [
+      "telecommunications",
+      "wireless",
+      "dividends"
+    ],
+    "recommendation_eligible": true,
+    "forecast_eligible": true,
+    "history_note": null,
+    "as_of": "2026-09-18",
+    "risk": {
+      "volatility_1y": 0.253642,
+      "beta": -0.306401,
+      "max_drawdown_1y": -0.170464,
+      "dividend_yield": 0.058141,
+      "history_days": 252,
+      "volatility_rank": 0.2778
+    }
+  },
+  {
+    "ticker": "LIN",
+    "name": "Linde plc",
+    "asset_type": "stock",
+    "category": "Materials",
+    "sector": "Materials",
+    "themes": [
+      "industrial_gases",
+      "manufacturing_inputs",
+      "defensive"
+    ],
+    "recommendation_eligible": true,
+    "forecast_eligible": true,
+    "history_note": null,
+    "as_of": "2026-09-18",
+    "risk": {
+      "volatility_1y": 0.189819,
+      "beta": 0.081277,
+      "max_drawdown_1y": -0.185702,
+      "dividend_yield": 0.013684,
+      "history_days": 252,
+      "volatility_rank": 0.0889
+    }
+  },
+  {
+    "ticker": "FCX",
+    "name": "Freeport-McMoRan Inc.",
+    "asset_type": "stock",
+    "category": "Materials",
+    "sector": "Materials",
+    "themes": [
+      "copper",
+      "mining",
+      "electrification"
+    ],
+    "recommendation_eligible": true,
+    "forecast_eligible": true,
+    "history_note": null,
+    "as_of": "2026-09-18",
+    "risk": {
+      "volatility_1y": 0.508812,
+      "beta": 2.244291,
+      "max_drawdown_1y": -0.243098,
+      "dividend_yield": 0.008387,
+      "history_days": 252,
+      "volatility_rank": 0.8111
+    }
+  },
+  {
+    "ticker": "NUE",
+    "name": "Nucor Corporation",
+    "asset_type": "stock",
+    "category": "Materials",
+    "sector": "Materials",
+    "themes": [
+      "steel",
+      "manufacturing",
+      "infrastructure"
+    ],
+    "recommendation_eligible": true,
+    "forecast_eligible": true,
+    "history_note": null,
+    "as_of": "2026-09-18",
+    "risk": {
+      "volatility_1y": 0.321844,
+      "beta": 0.927924,
+      "max_drawdown_1y": -0.184343,
+      "dividend_yield": 0.008978,
+      "history_days": 252,
+      "volatility_rank": 0.5333
+    }
+  },
+  {
+    "ticker": "ECL",
+    "name": "Ecolab Inc.",
+    "asset_type": "stock",
+    "category": "Materials",
+    "sector": "Materials",
+    "themes": [
+      "water_technology",
+      "industrial_services",
+      "sustainability"
+    ],
+    "recommendation_eligible": true,
+    "forecast_eligible": true,
+    "history_note": null,
+    "as_of": "2026-09-18",
+    "risk": {
+      "volatility_1y": 0.219651,
+      "beta": 0.486595,
+      "max_drawdown_1y": -0.200945,
+      "dividend_yield": 0.010836,
+      "history_days": 252,
+      "volatility_rank": 0.1667
+    }
+  },
+  {
+    "ticker": "APD",
+    "name": "Air Products and Chemicals, Inc.",
+    "asset_type": "stock",
+    "category": "Materials",
+    "sector": "Materials",
+    "themes": [
+      "industrial_gases",
+      "hydrogen",
+      "manufacturing_inputs"
+    ],
+    "recommendation_eligible": true,
+    "forecast_eligible": true,
+    "history_note": null,
+    "as_of": "2026-09-18",
+    "risk": {
+      "volatility_1y": 0.267967,
+      "beta": 0.16993,
+      "max_drawdown_1y": -0.205729,
+      "dividend_yield": 0.025336,
+      "history_days": 252,
+      "volatility_rank": 0.3444
+    }
+  },
+  {
+    "ticker": "SPY",
+    "name": "SPDR S&P 500 ETF Trust",
+    "asset_type": "etf",
+    "category": "Broad market ETF",
+    "sector": "Diversified",
+    "themes": [
+      "broad_market",
+      "market_context",
+      "large_cap"
+    ],
+    "recommendation_eligible": true,
+    "forecast_eligible": true,
+    "history_note": null,
+    "as_of": "2026-09-18",
+    "risk": {
+      "volatility_1y": 0.128624,
+      "beta": 1.0,
+      "max_drawdown_1y": -0.08885,
+      "dividend_yield": 0.012359,
+      "history_days": 252,
+      "volatility_rank": 0.0111
+    }
+  },
+  {
+    "ticker": "AIQ",
+    "name": "Global X Artificial Intelligence & Technology ETF",
+    "asset_type": "etf",
+    "category": "AI thematic ETF",
+    "sector": "Diversified",
+    "themes": [
+      "artificial_intelligence",
+      "technology",
+      "thematic"
+    ],
+    "recommendation_eligible": true,
+    "forecast_eligible": true,
+    "history_note": null,
+    "as_of": "2026-09-18",
+    "risk": {
+      "volatility_1y": 0.289478,
+      "beta": 1.917022,
+      "max_drawdown_1y": -0.201882,
+      "dividend_yield": 0.000702,
+      "history_days": 252,
+      "volatility_rank": 0.4222
+    }
+  },
+  {
+    "ticker": "SOXX",
+    "name": "iShares Semiconductor ETF",
+    "asset_type": "etf",
+    "category": "Semiconductor ETF",
+    "sector": "Information Technology",
+    "themes": [
+      "semiconductors",
+      "artificial_intelligence",
+      "hardware"
+    ],
+    "recommendation_eligible": true,
+    "forecast_eligible": true,
+    "history_note": null,
+    "as_of": "2026-09-18",
+    "risk": {
+      "volatility_1y": 0.456554,
+      "beta": 2.598672,
+      "max_drawdown_1y": -0.290087,
+      "dividend_yield": 0.002349,
+      "history_days": 252,
+      "volatility_rank": 0.7111
+    }
+  },
+  {
+    "ticker": "IGV",
+    "name": "iShares Expanded Tech-Software Sector ETF",
+    "asset_type": "etf",
+    "category": "Software ETF",
+    "sector": "Information Technology",
+    "themes": [
+      "enterprise_software",
+      "cloud_computing",
+      "digital_media"
+    ],
+    "recommendation_eligible": true,
+    "forecast_eligible": true,
+    "history_note": null,
+    "as_of": "2026-09-18",
+    "risk": {
+      "volatility_1y": 0.317583,
+      "beta": 1.222436,
+      "max_drawdown_1y": -0.366075,
+      "dividend_yield": 0.000163,
+      "history_days": 252,
+      "volatility_rank": 0.4889
+    }
+  },
+  {
+    "ticker": "GRID",
+    "name": "First Trust NASDAQ Clean Edge Smart Grid Infrastructure Index Fund",
+    "asset_type": "etf",
+    "category": "Grid infrastructure ETF",
+    "sector": "Industrials",
+    "themes": [
+      "grid_infrastructure",
+      "electrification",
+      "renewable_energy"
+    ],
+    "recommendation_eligible": true,
+    "forecast_eligible": true,
+    "history_note": null,
+    "as_of": "2026-09-18",
+    "risk": {
+      "volatility_1y": 0.237065,
+      "beta": 1.436511,
+      "max_drawdown_1y": -0.158179,
+      "dividend_yield": 0.008022,
+      "history_days": 252,
+      "volatility_rank": 0.2444
+    }
+  },
+  {
+    "ticker": "XLV",
+    "name": "Health Care Select Sector SPDR Fund",
+    "asset_type": "etf",
+    "category": "Healthcare ETF",
+    "sector": "Health Care",
+    "themes": [
+      "healthcare",
+      "sector_etf",
+      "diversification"
+    ],
+    "recommendation_eligible": true,
+    "forecast_eligible": true,
+    "history_note": null,
+    "as_of": "2026-09-18",
+    "risk": {
+      "volatility_1y": 0.158788,
+      "beta": 0.277224,
+      "max_drawdown_1y": -0.104699,
+      "dividend_yield": 0.015042,
+      "history_days": 252,
+      "volatility_rank": 0.0333
+    }
+  },
+  {
+    "ticker": "XLF",
+    "name": "Financial Select Sector SPDR Fund",
+    "asset_type": "etf",
+    "category": "Financial ETF",
+    "sector": "Financials",
+    "themes": [
+      "financials",
+      "sector_etf",
+      "diversification"
+    ],
+    "recommendation_eligible": true,
+    "forecast_eligible": true,
+    "history_note": null,
+    "as_of": "2026-09-18",
+    "risk": {
+      "volatility_1y": 0.145485,
+      "beta": 0.610456,
+      "max_drawdown_1y": -0.147948,
+      "dividend_yield": 0.014447,
+      "history_days": 252,
+      "volatility_rank": 0.0222
+    }
+  },
+  {
+    "ticker": "XLY",
+    "name": "Consumer Discretionary Select Sector SPDR Fund",
+    "asset_type": "etf",
+    "category": "Consumer discretionary ETF",
+    "sector": "Consumer Discretionary",
+    "themes": [
+      "consumer_discretionary",
+      "sector_etf",
+      "diversification"
+    ],
+    "recommendation_eligible": true,
+    "forecast_eligible": true,
+    "history_note": null,
+    "as_of": "2026-09-18",
+    "risk": {
+      "volatility_1y": 0.194435,
+      "beta": 1.161926,
+      "max_drawdown_1y": -0.149757,
+      "dividend_yield": 0.008128,
+      "history_days": 252,
+      "volatility_rank": 0.1
+    }
+  },
+  {
+    "ticker": "XLI",
+    "name": "Industrial Select Sector SPDR Fund",
+    "asset_type": "etf",
+    "category": "Industrial ETF",
+    "sector": "Industrials",
+    "themes": [
+      "industrials",
+      "sector_etf",
+      "diversification"
+    ],
+    "recommendation_eligible": true,
+    "forecast_eligible": true,
+    "history_note": null,
+    "as_of": "2026-09-18",
+    "risk": {
+      "volatility_1y": 0.171747,
+      "beta": 0.948574,
+      "max_drawdown_1y": -0.122135,
+      "dividend_yield": 0.01213,
+      "history_days": 252,
+      "volatility_rank": 0.0444
+    }
+  },
+  {
+    "ticker": "XLE",
+    "name": "Energy Select Sector SPDR Fund",
+    "asset_type": "etf",
+    "category": "Energy ETF",
+    "sector": "Energy",
+    "themes": [
+      "energy",
+      "sector_etf",
+      "diversification"
+    ],
+    "recommendation_eligible": true,
+    "forecast_eligible": true,
+    "history_note": null,
+    "as_of": "2026-09-18",
+    "risk": {
+      "volatility_1y": 0.217011,
+      "beta": -0.282561,
+      "max_drawdown_1y": -0.149763,
+      "dividend_yield": 0.023597,
+      "history_days": 252,
+      "volatility_rank": 0.1444
+    }
+  }
+]

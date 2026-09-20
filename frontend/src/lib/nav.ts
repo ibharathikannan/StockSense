@@ -1,4 +1,4 @@
-import { LayoutDashboard, ShieldCheck, UserCircle, Users } from "lucide-react";
+import { LayoutDashboard, Settings, ShieldCheck, UserCircle, Users } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 export interface NavItem {
@@ -14,5 +14,6 @@ export const NAV_ITEMS: NavItem[] = [
   { label: "Dashboard", href: "/", icon: LayoutDashboard },
   { label: "Users", href: "/users", icon: Users, permission: "users:read" },
   { label: "Roles", href: "/roles", icon: ShieldCheck, permission: "roles:read" },
-  { label: "My profile", href: "/profile", icon: UserCircle },
+  { label: "Profile", href: "/profile", icon: UserCircle },
+  { label: "Account settings", href: "/account", icon: Settings },
 ];
