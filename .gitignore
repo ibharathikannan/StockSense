@@ -8,3 +8,14 @@
 Thumbs.db
 .idea/
 .vscode/
+
+# Python-generated files and the optional data-pipeline environment
+__pycache__/
+*.py[cod]
+.venv-data/
+data/.cache/
+
+# Parquet is the shared dataset format. CSV copies are generated locally with
+# data/convert_parquet_to_csv.py and are not committed.
+data/raw/*.csv
+data/processed/*.csv
