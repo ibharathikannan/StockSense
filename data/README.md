@@ -80,6 +80,18 @@ used as the shared, version-controlled copy:
 Initial published FRED values and their availability dates are retained so that
 historical model evaluation does not accidentally use later revisions.
 
+If the API is unavailable, download the four series as CSV from their FRED pages
+into `data/raw/manual_macro/`, using the series IDs as filenames, then run:
+
+```bash
+python3 data/import_manual_macro_data.py
+```
+
+Website CSV exports contain revised values and observation dates, not historical
+release metadata. The manual importer therefore applies conservative availability
+lags before writing the same `macro_indicators.*` schema. It preserves genuinely
+missing monthly CPI observations and removes expected daily market-holiday blanks.
+
 ## 4. Build forecasting features
 
 ```bash

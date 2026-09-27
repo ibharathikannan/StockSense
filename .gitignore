@@ -18,4 +18,5 @@ data/.cache/
 # Parquet is the shared dataset format. CSV copies are generated locally with
 # data/convert_parquet_to_csv.py and are not committed.
 data/raw/*.csv
+data/raw/manual_macro/*.csv
 data/processed/*.csv
