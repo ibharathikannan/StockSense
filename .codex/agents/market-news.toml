@@ -1,0 +1,3 @@
+name = "market_news"
+description = "Collect market news and provider sentiment with coverage and quota tracking."
+developer_instructions = "Read AGENTS.md and docs/ai/PLAN.md. Work only in assigned files. Use Alpaca and Alpha Vantage within configured entitlements/quotas. Preserve dates, revisions and ticker associations, paginate completely, and distinguish empty results from failures. Keep provider sentiment separate from local estimates. Never print secrets. Report artifacts and blockers."

@@ -166,13 +166,13 @@ def build_macro_context(macro_data: pd.DataFrame) -> pd.DataFrame:
     return context.sort_values("Date").ffill()
 
 
-def main() -> None:
-    if not PRICE_PATH.exists():
-        raise FileNotFoundError(
-            f"Missing {PRICE_PATH}. Run download_historical_prices.py first."
-        )
-
-    prices = pd.read_parquet(PRICE_PATH)
+def build_feature_dataset(
+    prices: pd.DataFrame,
+    universe: pd.DataFrame,
+    macro_data: pd.DataFrame | None = None,
+) -> pd.DataFrame:
+    """Build the existing forecasting schema without writing source datasets."""
+    prices = prices.copy()
     prices["Date"] = pd.to_datetime(prices["Date"])
     prices = prices.sort_values(["ticker", "Date"]).reset_index(drop=True)
 
@@ -184,21 +184,17 @@ def main() -> None:
     market_context = build_market_context(prices)
     featured = featured.merge(market_context, on="Date", how="left")
 
-    if MACRO_PATH.exists():
-        macro_data = pd.read_parquet(MACRO_PATH)
+    if macro_data is not None:
         macro_context = build_macro_context(macro_data)
+        # Pandas 3 can preserve different Parquet datetime units on the two
+        # inputs; merge_asof requires identical key dtypes.
+        macro_context["Date"] = macro_context["Date"].astype(featured["Date"].dtype)
         featured = pd.merge_asof(
             featured.sort_values("Date"),
             macro_context.sort_values("Date"),
             on="Date",
             direction="backward",
         )
-    else:
-        print(
-            f"Warning: {MACRO_PATH} was not found. Building features without FRED data."
-        )
-
-    universe = pd.read_csv(UNIVERSE_PATH)
     eligible_metadata = universe.loc[
         universe["forecast_eligible"].astype(str).str.lower().eq("true"),
         ["ticker", "asset_type", "category", "sector"],
@@ -210,6 +206,26 @@ def main() -> None:
     featured = featured.merge(eligible_metadata, on="ticker", how="left")
     featured["is_training_row"] = featured["target_return_10d"].notna()
     featured = featured.sort_values(["ticker", "Date"]).reset_index(drop=True)
+
+    return featured
+
+
+def main() -> None:
+    if not PRICE_PATH.exists():
+        raise FileNotFoundError(
+            f"Missing {PRICE_PATH}. Run download_historical_prices.py first."
+        )
+
+    prices = pd.read_parquet(PRICE_PATH)
+    universe = pd.read_csv(UNIVERSE_PATH)
+    if MACRO_PATH.exists():
+        macro_data = pd.read_parquet(MACRO_PATH)
+    else:
+        print(
+            f"Warning: {MACRO_PATH} was not found. Building features without FRED data."
+        )
+        macro_data = None
+    featured = build_feature_dataset(prices, universe, macro_data)
 
     PROCESSED_DIR.mkdir(parents=True, exist_ok=True)
     csv_path = PROCESSED_DIR / "forecast_features.csv"

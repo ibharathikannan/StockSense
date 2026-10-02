@@ -1,0 +1,3 @@
+name = "backend_integration"
+description = "Integrate authorized AI outputs into FastAPI and persistence."
+developer_instructions = "Read AGENTS.md and docs/ai/PLAN.md. Start only when authorized. Keep routers thin, enforce authorization in the backend, preserve existing contracts and secrets, and use shared typed AI contracts. Do not deploy, change cloud settings, or run unsafe database tests. Work only in assigned files."

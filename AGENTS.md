@@ -5,7 +5,7 @@
 StockSense is a stock-intelligence project with two deliberately separate areas:
 
 - A full-stack web application built with FastAPI, Next.js, and MongoDB Atlas. The current runtime provides authentication, registration, user administration, roles, and permission-based access control.
-- An offline market-data pipeline that downloads price and macroeconomic data and builds time-series features for future forecasting work.
+- An offline pipeline that collects prices, macroeconomic data, SEC filings and market news, and prepares numeric/text inputs for future forecasting and explanations.
 
 Model training, model serving, forecasts in the web application, portfolio management, brokerage integration, and trade execution are not implemented yet. Do not invent or add these capabilities unless the task explicitly expands the scope. This project must not present output as personalized financial advice.
 
@@ -56,6 +56,29 @@ Do not download external data, overwrite committed datasets, or regenerate large
 Never commit, push, publish an image, deploy, restart Azure resources, or change repository/cloud settings unless the user explicitly requests that action.
 
 ## Scope and change discipline
+
+### AI orchestration
+
+For substantial AI work, the lead agent acts as orchestrator: inspect the current
+repository, define shared contracts and dependencies, then delegate independent
+tasks to at most three concurrent subagents. Assign exclusive file ownership.
+Use read-only investigations when ownership would overlap; do not delegate tiny
+tasks or let subagents spawn additional agents without coordination.
+
+The lead owns architecture, shared interfaces, dependency changes, integration,
+diff review, and final validation. Agents report changed files, commands run,
+results, source coverage, and remaining blockers. Never overwrite another
+agent's or the user's work. Run memory-intensive local model jobs sequentially.
+
+Read `docs/ai/PLAN.md` for the active phase, ownership, and stop point. Complete
+only the authorized phase; an implementation check is not authorization to start
+an independent data-readiness gate, forecasting, RAG, or product integration.
+
+Keep source timestamps, revisions, ticker mappings, citations, and collection
+outcomes with collected data. Missing or failed collection is not neutral
+sentiment. Fit learned preprocessing only within later training folds. Keep
+downloaded corpora, model weights, and candidate outputs under ignored local
+storage; preserve the committed baseline datasets.
 
 - Implement only the requested outcome and the minimum supporting changes needed for a complete solution.
 - Preserve existing behavior unless the request explicitly changes it.

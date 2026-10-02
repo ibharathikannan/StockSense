@@ -11,7 +11,7 @@
 | --- | --- |
 | [`backend/`](backend/) | FastAPI API: login and registration, users and roles, investor profile, asset search. Runs on port 8000. |
 | [`frontend/`](frontend/) | Next.js web app: sign-in, profile (onboarding), account settings, admin pages. Runs on port 3000. |
-| [`data/`](data/README.md) | Offline market-data pipeline: downloads prices, builds forecasting features and the asset catalogue. See [`data/README.md`](data/README.md). |
+| [`data/`](data/README.md) | Offline prices/macro features, asset catalogue, SEC/news collection, and local text preparation. See [`data/README.md`](data/README.md). |
 
 ## Login accounts
 

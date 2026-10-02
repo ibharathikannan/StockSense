@@ -141,3 +141,146 @@ CSV copies are replaced so they always match the shared Parquet data.
 
 Yahoo Finance data obtained through `yfinance` is intended for research and
 personal use. Review the provider's terms before redistributing it.
+
+## 6. Collection and preparation worktree
+
+The AI worktree adds offline collection and preparation commands. The current
+authorization ends after preparation: the independent data-readiness gate,
+forecast-model training, retrieval indexes, RAG generation, and rule-engine
+integration have not started. Agent ownership and the handoff live in
+[`docs/ai/PLAN.md`](../docs/ai/PLAN.md).
+
+New corpora and candidate datasets go under ignored `data/artifacts/`; model
+caches and the Alpha Vantage quota ledger go under ignored `data/.cache/`.
+The committed price, macro, feature, and asset-profile artifacts are not
+overwritten by these commands. Keep downloaded provider content local; API
+access alone does not establish public redistribution rights.
+
+### Configure collection
+
+```bash
+cp data/.env.example data/.env
+```
+
+Fill **`data/.env`**, not the example file, with `APCA_API_KEY_ID`,
+`APCA_API_SECRET_KEY`, and `ALPHA_VANTAGE_API_KEY`. Exported environment
+variables take precedence. Values are read literally without shell expansion.
+
+SEC EDGAR needs no API key. Set `SEC_USER_AGENT` to an organization/project
+name followed by a real contact email. Collection waits for this identification
+instead of guessing one. Secrets must never be committed or pasted into logs.
+
+### Audit and prepare market candidates
+
+```bash
+python3 data/prepare_market_data.py
+```
+
+This writes price-only and macro-enriched feature Parquets plus a manifest in
+`data/artifacts/market/`. The manifest records source hashes, coverage,
+missingness, target checks, predictor allowlists, and macro provenance. It is
+a descriptive preparation report, not a readiness or model-promotion decision.
+
+The current committed feature table matches the price-only candidate. The
+macro artifact's fixed availability lags and null vintage-end fields match
+the manual-import format, so historical point-in-time values remain unverified.
+The macro candidate must not silently become the default training dataset.
+
+### Collect SEC filings
+
+```bash
+python3 data/collect_sec_filings.py --pilot 5
+python3 data/collect_sec_filings.py
+```
+
+The first command is the parsing/issuer-mapping pilot. After inspecting its
+outputs, the second collects all stock issuers and records ETFs/VIX as not
+applicable to this corporate-filing corpus. Defaults are two annual reports,
+four domestic quarterly reports, and 90 days of event filings. Foreign issuers
+use 20-F or Canadian 40-F annual reports and recent 6-K forms. Missing history is recorded explicitly.
+
+`data/artifacts/sec/` contains `documents.jsonl`, per-ticker `coverage.json`,
+and raw cached responses/documents. Hidden XBRL metadata is excluded from text;
+visible facts and table cell boundaries are preserved. Parser version changes
+refresh normalized text from cached HTML while preserving fetch timestamps.
+Every record retains acceptance time,
+accession, form, issuer, source URL, and content hash. Inventories refresh once
+per run; accession documents are reused. Earlier historical cutoffs require
+a separate output directory if a later snapshot already exists.
+
+Use `--tickers AAPL,MSFT`, `--as-of 2026-10-02T00:00:00Z`, or
+`--output-dir data/artifacts/sec-pilot` for bounded runs. Requests are throttled
+to two per second, with retries for transient failures.
+
+### Collect recent news
+
+```bash
+python3 data/collect_news.py --provider alpaca --days 1
+python3 data/collect_news.py --provider alpaca --days 30
+python3 data/collect_news.py --provider alpha_vantage --days 7
+```
+
+Alpaca is the primary corpus: every result page is fetched, then provider ticker
+tags are matched against all 90 stocks/ETFs. The cutoff defaults to 15 minutes
+before the current time. Daily windows resume independently; failed windows
+are retried rather than marked complete. Article revisions are retained.
+
+Alpha Vantage is supplementary. Its 25-request UTC-day budget is reserved
+atomically before each request, including retries, and is shared across output
+directories. Do not delete its quota database to reset usage; calls made outside
+these collectors still count toward the provider's quota. Newest windows are
+requested first. A 1,000-item response is marked partial, and provider notices
+stop the run instead of consuming the remaining budget. Partial supplementation
+does not establish complete historical news coverage.
+
+`data/artifacts/news/` contains `documents.jsonl` and `coverage.json` with
+window outcomes and ticker counts. News `available_at` is the first time that
+version was collected, not its original publication time. Provider sentiment
+stays separate from locally inferred sentiment. Missing sentiment stays missing.
+
+### Prepare text and local sentiment
+
+Install the optional offline preparation dependencies in the data environment:
+
+```bash
+python3 -m pip install -r data/requirements-preparation.txt
+python3 data/prepare_text_data.py --download-models
+```
+
+The first preparation run downloads pinned public tokenizer/FinBERT revisions
+to `data/.cache/huggingface/`. Subsequent runs work from local weights:
+
+```bash
+python3 data/prepare_text_data.py
+```
+
+Outputs under `data/artifacts/prepared/` are:
+
+- `documents.jsonl`: normalized current document versions with source provenance.
+- `chunks.jsonl`: section-aware, 220-token passages with 32-token overlap;
+  character offsets refer to the normalized document text and retain source URLs.
+- `sentiment.jsonl`: per-article/ticker pretrained FinBERT estimates, attribution
+  gaps, truncation indicators, and the pinned model revision.
+- `sentiment_aggregates.jsonl`: current seven-day ticker aggregates with a two-day
+  decay half-life; local estimates and Alpha Vantage scores remain separate.
+- `manifest.json`: source hashes, coverage, rejected records, and preparation counts.
+
+Only company-specific sentences are scored; sentences that mention multiple
+tagged companies are excluded from per-company attribution. This is a
+conservative heuristic, not an independently validated sentiment benchmark.
+No local sentiment score is manufactured when attribution is unavailable.
+Use `--sentiment none` to explicitly skip scoring; the manifest records the skip.
+
+`--as-of` filters by known availability and revision time. Current/backfilled
+news snapshots are not automatically valid historical training features.
+SEC/source gaps remain visible in the manifest. This stage performs no PCA,
+forecast training, embedding generation, vector indexing, or LLM generation.
+
+### Implementation checks
+
+```bash
+python3 -m pytest -q data/tests
+```
+
+These tests use temporary fixture data and mocked provider requests. They do
+not access MongoDB, consume API quota, or run the independent data gate.
