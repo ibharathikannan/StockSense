@@ -1,11 +1,13 @@
-# AI collection and preparation
+# AI work plan
 
 ## Authorized work and stop point
 
-Implement first-wave collection and preparation only. Stop for user review
-before the independent data-readiness gate. Model training, retrieval indexes,
-RAG generation, rule-engine changes, application integration, commits, pushes,
-and deployment are not part of this phase.
+Collection, preparation and shared-data migration are complete. On 2026-10-03
+the user authorized the independent data-readiness gate. Audit existing sources
+and snapshots, record reproducible evidence and consolidate readiness decisions.
+Stop after the gate report and required-fix list. Model training, learned PCA/LDA
+fitting, retrieval indexes, RAG generation, rule-engine changes, application
+integration, commits, pushes and deployment are not authorized by this gate.
 
 Use `data/asset_universe.csv`: 80 stocks, 10 ETFs, and VIX for context; preserve
 the existing forecast eligibility flags. Work in this worktree, with no more
@@ -21,8 +23,8 @@ than three concurrent subagents. The lead orchestrator integrates shared files.
 | Preparation (after collection) | text preparation and associated tests | Normalized sections/chunks and dated sentiment aggregates |
 | Orchestrator | shared collection utilities, docs, agent setup, integration | Stable contracts, safe configuration, implementation checks, handoff |
 
-The evaluation, forecasting, discovery/rules, RAG, backend, and frontend roles
-remain unstarted. They require later user authorization.
+Evaluation is authorized for the data gate. Forecasting, discovery/rules, RAG,
+backend AI integration and frontend AI integration require later authorization.
 
 ## Shared contracts
 
@@ -52,7 +54,8 @@ remain unstarted. They require later user authorization.
    SEC/news text, including cached SEC text cleanup.
 4. Implementation checks: 33 offline tests pass; serialized chunk offsets and
    finite sentiment outputs checked across the refreshed corpus. User handoff is the current stop point.
-5. Independent data gate: **not authorized**.
+5. Independent data gate: **completed 2026-10-03; conditional readiness**.
+   See [DATA_GATE.md](DATA_GATE.md) for use-specific decisions and required fixes.
 
 SEC identification and Alpaca/Alpha Vantage credentials are configured in ignored
 `data/.env`. EDGAR collection succeeded using the supplied `SEC_USER_AGENT`. The credential file was removed from Git staging and stays local.
@@ -85,12 +88,13 @@ SEC identification and Alpaca/Alpha Vantage credentials are configured in ignore
 
 These are implementation results, not an independent readiness decision.
 Market and current news snapshots have different dates; no historical text join
-has been performed. The future data gate remains unstarted.
+has been performed. This collection handoff predates the now-completed data gate.
 
 ### Stop point
 
-Collection and preparation only. Await user review before any independent data
-gate, forecast training, learned PCA/LDA fitting, retrieval indexing, or rules.
+The original collection/preparation stop point was reached. The user subsequently
+authorized storage migration and then the independent data gate. Stop after the
+gate report; downstream implementation remains a separate phase.
 
 Commands completed include `python3 data/prepare_market_data.py`, the Alpaca
 one-day pilot and 30-day run, the seven-day Alpha Vantage supplement,
@@ -157,3 +161,41 @@ classification experiment. Topic-model LDA is a separate text experiment, not a
 required numeric forecasting or RAG preparation step. Neither PCA nor LDA is fitted
 as a global preprocessing step before temporal splitting. This sequencing note does
 not authorize the data gate, learned preprocessing or forecast training.
+
+## Independent data gate (authorized 2026-10-03)
+
+The orchestrator delegates three independent evaluations with exclusive ownership:
+
+| Evaluation | Owned files | Scope |
+| --- | --- | --- |
+| Numeric | `data/evaluation/numeric_gate.py`, `docs/ai/NUMERIC_GATE.md` | Prices, labels, predictors, temporal leakage, eligibility and macro provenance |
+| Text | `data/evaluation/text_gate.py`, `docs/ai/TEXT_GATE.md` | Source coverage, revision/availability, text/chunk integrity, sentiment and sampled evidence quality |
+| Shared storage | `docs/ai/STORAGE_GATE.md` | Local snapshot identity, migration contracts, archives and shared-consumer limitations |
+| Orchestrator | `docs/ai/DATA_GATE.md`, this plan | Consolidated evidence, use-specific readiness and required actions |
+
+Machine-readable evidence goes under ignored `data/artifacts/evaluation/`.
+Input files, provider caches, prepared datasets and the migrated schema are not
+modified. No provider downloads, preprocessing fitting, model jobs or index builds
+are included. Remote verification is reported separately from local evidence.
+
+Readiness is assigned by intended use rather than a single blanket approval:
+PASS means the audited checks support that use; CONDITIONAL means explicit input
+restrictions or implementation contracts remain; BLOCKED means the input cannot
+support the stated use until identified defects or missing evidence are resolved.
+A report must distinguish exhaustive mechanical checks from sampled semantic
+review and identify limitations such as current-universe and adjusted-price bias.
+
+### Gate handoff
+
+The independent gate completed with conditional price-only offline forecasting
+and bounded narrative RAG readiness. Historical macro/sentiment training,
+complete financial/event explanations, validated company sentiment and live
+forecast serving remain blocked for their stated uses. Existing corpus mechanics
+and shared snapshot counts passed. Required remediation and implementation
+contracts are consolidated in [DATA_GATE.md](DATA_GATE.md); individual numeric,
+text and storage reports retain evidence and limitations. The text checker exits
+1 for a demonstrated malformed-input crash, not stored-corpus corruption.
+
+The current stop point is after this report. Remediation, new collection,
+preprocessing/PCA fitting, forecast training, embedding/index generation, RAG,
+rule integration and deployment need subsequent authorization.

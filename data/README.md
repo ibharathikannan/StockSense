@@ -145,9 +145,11 @@ personal use. Review the provider's terms before redistributing it.
 ## 6. Collection and preparation worktree
 
 The AI worktree adds offline collection and preparation commands. The current
-authorization ends after preparation: the independent data-readiness gate,
-forecast-model training, retrieval indexes, RAG generation, and rule-engine
-integration have not started. Agent ownership and the handoff live in
+collection/preparation and shared migration are complete. The independently
+authorized data gate has completed with conditions; see
+[`docs/ai/DATA_GATE.md`](../docs/ai/DATA_GATE.md). Forecast-model training, learned
+preprocessing, retrieval indexes, RAG generation and rule-engine integration
+have not started. Agent ownership and the handoff live in
 [`docs/ai/PLAN.md`](../docs/ai/PLAN.md).
 
 New corpora and candidate datasets go under ignored `data/artifacts/`; model
