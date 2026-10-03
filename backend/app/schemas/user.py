@@ -31,7 +31,7 @@ class UserOut(BaseModel):
     @classmethod
     def from_doc(cls, doc: dict[str, Any]) -> "UserOut":
         return cls(
-            id=str(doc["_id"]),
+            id=str(doc["id"]),
             email=doc["email"],
             full_name=doc.get("full_name", ""),
             role=doc["role"],

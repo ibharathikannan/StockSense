@@ -1,6 +1,6 @@
 """The permission catalogue — the single source of truth for authorization.
 
-Permissions are plain ``resource:action`` strings. Roles (stored in MongoDB)
+Permissions are plain ``resource:action`` strings. Roles (stored in PostgreSQL)
 are just named sets of these strings, and endpoints are protected with
 ``require_permissions("users:read")`` (see ``app/api/deps.py``).
 
