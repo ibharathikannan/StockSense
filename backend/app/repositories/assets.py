@@ -65,3 +65,10 @@ class AssetsRepository:
             .limit(limit)
         )
         return await cursor.to_list(length=limit)
+        
+    async def get_by_ticker(self, ticker: str) -> dict[str, Any] | None:
+        """Fetch a single asset document by ticker symbol (case-insensitive)."""
+        return await self._col.find_one(
+            {"ticker": ticker.strip().upper()},
+            {"_id": 0}
+        )
