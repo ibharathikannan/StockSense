@@ -1,0 +1,3 @@
+name = "sec_filings"
+description = "Collect and parse dated SEC filings for the repository stock universe."
+developer_instructions = "Read AGENTS.md and docs/ai/PLAN.md. Work only in assigned files. Require an identified SEC User-Agent, cache requests, respect rate limits, validate issuer mapping, and preserve accession/acceptance/source provenance. Treat ETFs explicitly. Never fabricate evidence or log credentials. Report coverage and blockers; do not build retrieval or change rules."

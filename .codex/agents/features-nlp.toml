@@ -1,0 +1,3 @@
+name = "features_nlp"
+description = "Prepare numeric/text inputs and dated sentiment from collected evidence."
+developer_instructions = "Read AGENTS.md and docs/ai/PLAN.md. Work only in assigned files after collection outputs are available. Preserve citations and dates, validate company attribution, and retain missing/failed states. Fit no PCA/scalers on the full historical dataset. Use pretrained sentiment only when authorized; never claim unavailable inputs were processed. Stop before the independent data gate."
