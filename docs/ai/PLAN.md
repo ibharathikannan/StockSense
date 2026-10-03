@@ -106,3 +106,37 @@ independent time-series and evidence checks. Discovery/rules owns deterministic
 research stances. RAG owns retrieval and Ollama explanations. Backend and
 frontend integration own the corresponding product interfaces. None starts
 as part of collection/preparation.
+
+## Shared-data direction: Azure PostgreSQL
+
+The user has authorized migration of existing local market datasets and SEC/news
+text into their Azure PostgreSQL instance. This replaces the earlier LanceDB
+private API/VM direction. MongoDB remains the web application's database.
+
+The authorized migration adds connection configuration, typed numeric tables,
+queryable documents/chunks with complete JSONB payloads, immutable snapshots,
+original-file archives, resumable imports and verification. It reads existing
+artifacts without downloading providers' data or regenerating preparation outputs.
+See `data/SHARED_DATA.md` for commands, storage mapping and verification limits.
+
+The separate optional PostgreSQL dependency does not replace the retained local
+LanceDB helpers. Preserve local originals and committed baselines until verified
+migration. A successful local implementation check does not establish that a
+remote migration occurred; actual import requires configured credentials.
+
+This migration does not authorize embeddings, pgvector/BM25 indexes, RAG generation,
+forecasting, the independent data-readiness gate, web integration or deployment.
+
+### Migration handoff (2026-10-03)
+
+- Created `stocksense_data` on the supplied Azure PostgreSQL instance and imported
+  the local inventory under schema `ss_ef82d22e57e68952a418`.
+- All 12 queryable tables (662,926 rows) passed complete row/schema verification;
+  all 778 archived files passed decompressed size and SHA-256 checks.
+- Prices cover 91 tickers from 2020-09-01 through 2026-09-18. All 173,292 prepared
+  chunks reference existing prepared documents. Source metadata and local files
+  were preserved; credentials remain in ignored local configuration.
+- 59 data tests and 12 subtests pass, including real local PostgreSQL integration
+  tests and a regression for Azure's different text collation.
+- The migration is complete. Embedding generation and RAG remain the next separate
+  phase; no models, vector indexes, product integration or deployment were added.

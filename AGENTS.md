@@ -42,7 +42,8 @@ Keep backend calls out of presentational components when a domain service is the
 
 - The data pipeline is offline and is not a runtime dependency of the web application.
 - Collection, macro-data download, feature construction, and format conversion remain separate steps.
-- Parquet files are the shared datasets; CSV files are local convenience copies unless documentation says otherwise.
+- Parquet files retain the numeric dataset schemas; CSV files are local convenience copies.
+- Shared offline data is being migrated to Azure PostgreSQL: numeric Parquet datasets become typed SQL tables, prepared documents/chunks retain text and JSONB provenance, and original inventoried files are archived by default. See `data/SHARED_DATA.md` for the separate migration commands and connection setup. MongoDB remains the application database. Preserve original files, provenance and committed baselines until verified migration; embedding generation and retrieval remain separate work.
 - Time-series evaluation must avoid future leakage. Fit learned preprocessing on training folds only and do not replace walk-forward validation with random train/test splits.
 
 Do not download external data, overwrite committed datasets, or regenerate large artifacts unless the task explicitly requires it. Preserve dataset schemas unless a coordinated schema change is part of the request.
@@ -77,8 +78,9 @@ an independent data-readiness gate, forecasting, RAG, or product integration.
 Keep source timestamps, revisions, ticker mappings, citations, and collection
 outcomes with collected data. Missing or failed collection is not neutral
 sentiment. Fit learned preprocessing only within later training folds. Keep
-downloaded corpora, model weights, and candidate outputs under ignored local
-storage; preserve the committed baseline datasets.
+local corpora, model weights, and candidate outputs under ignored storage. Shared
+data will be queried from Azure PostgreSQL after verified migration; model
+caches and quota ledgers remain local. Preserve committed baselines until then.
 
 - Implement only the requested outcome and the minimum supporting changes needed for a complete solution.
 - Preserve existing behavior unless the request explicitly changes it.

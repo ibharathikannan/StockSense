@@ -1,0 +1,2 @@
+# Optional LanceDB loading helpers; install alongside data/requirements.txt.
+lancedb==0.39.0

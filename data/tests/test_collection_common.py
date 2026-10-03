@@ -34,6 +34,19 @@ def test_transport_error_does_not_include_secret_url(monkeypatch):
     assert caught.value.retry_after == "3"
 
 
+def test_postgres_environment_is_literal_and_exports_win(tmp_path, monkeypatch):
+    monkeypatch.setenv("PGHOST", "exported.example")
+    monkeypatch.delenv("PGPASSWORD", raising=False)
+    monkeypatch.delenv("PGDATABASE", raising=False)
+    path = tmp_path / ".env"
+    path.write_text('PGHOST=file.example\nPGDATABASE=stocksense_data\n'
+                    'PGPASSWORD="$(echo forbidden)#literal"\n')
+    common.load_environment(path)
+    assert os.environ["PGHOST"] == "exported.example"
+    assert os.environ["PGDATABASE"] == "stocksense_data"
+    assert os.environ["PGPASSWORD"] == "$(echo forbidden)#literal"
+
+
 def test_jsonl_roundtrip_and_reject_nonobjects(tmp_path):
     path = tmp_path / "nested" / "rows.jsonl"
     common.write_jsonl(path, [{"title": "A & B"}])

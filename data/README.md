@@ -284,3 +284,33 @@ python3 -m pytest -q data/tests
 
 These tests use temporary fixture data and mocked provider requests. They do
 not access MongoDB, consume API quota, or run the independent data gate.
+
+## 7. Shared data: Azure PostgreSQL
+
+Import canonical Parquet datasets into numeric SQL tables, and prepared SEC/news
+documents and chunks into text tables with source metadata and complete JSONB
+payloads. The importer also archives original inventoried files by default.
+See [`SHARED_DATA.md`](SHARED_DATA.md) for connection configuration and examples.
+MongoDB remains the web application's database.
+
+Inventory is read-only and makes no network requests:
+
+```bash
+python3 -m data.shared_data inventory --source-root data
+```
+
+Install the optional PostgreSQL dependency separately, then import and verify
+using local libpq connection settings:
+
+```bash
+python3 -m pip install -r data/requirements-postgres.txt
+python3 -m data.shared_data postgres-import --source-root data --prompt-password
+python3 -m data.shared_data postgres-verify --source-root data --prompt-password
+```
+
+The importer preserves immutable snapshots and can resume incomplete uploads.
+Keep original files and committed baselines until verification succeeds. CSV
+convenience copies are redundant and excluded; the asset universe CSV is imported.
+The legacy local LanceDB helpers and `data/requirements-storage.txt` remain
+available, but are not used for this migration. Embeddings, vector indexes and
+RAG generation are not implemented by these commands.

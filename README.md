@@ -63,6 +63,15 @@ Open http://localhost:3000 and sign in with one of the accounts above. The first
 
 > Atlas must allow your IP address (*Network Access*), or the backend cannot connect.
 
+## Shared market and document data
+
+Local Parquet datasets and prepared SEC/news text can be imported into Azure
+PostgreSQL as queryable tables, with an optional archive of original files.
+See [the shared-data guide](data/SHARED_DATA.md) for setup, import and verification.
+MongoDB continues to serve the web application. Keep local originals and
+committed baselines until the PostgreSQL migration is verified. Embedding
+creation and RAG retrieval remain separate future work.
+
 ## Deployment
 
 The app runs on Azure as a single container built from the root `Dockerfile`, using the same Atlas database. After pushing a new image to the registry, restart the web app:

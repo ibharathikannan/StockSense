@@ -45,6 +45,8 @@ def load_environment(path: str | Path | None = None) -> None:
             "APCA_API_KEY_ID", "APCA_API_SECRET_KEY", "ALPACA_API_KEY",
             "ALPACA_SECRET_KEY", "ALPHA_VANTAGE_API_KEY", "ALPHAVANTAGE_API_KEY",
             "SEC_USER_AGENT", "FRED_API_KEY", "HF_HOME", "HF_TOKEN",
+            "PGHOST", "PGPORT", "PGDATABASE", "PGUSER", "PGPASSWORD",
+            "PGSSLMODE", "PGSSLROOTCERT", "PGCONNECT_TIMEOUT", "PGPASSFILE",
         }:
             continue
         raw = raw.strip()
