@@ -1,7 +1,7 @@
 from __future__ import annotations
 
+import asyncpg
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from pymongo.errors import DuplicateKeyError
 
 from app.api.deps import Principal, get_roles_repo, get_users_repo, require_any_permission, require_permissions
 from app.core.permissions import ADMIN_ROLE, DEFAULT_ROLE, PERMISSIONS, group_of
@@ -87,7 +87,7 @@ async def create_role(
             permissions=payload.permissions,
             created_by=principal.user["email"],
         )
-    except DuplicateKeyError:
+    except asyncpg.UniqueViolationError:
         raise HTTPException(status.HTTP_409_CONFLICT, detail=f"A role named '{payload.name}' already exists") from None
     return RoleOut.from_doc(role)
 

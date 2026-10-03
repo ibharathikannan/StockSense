@@ -1,19 +1,31 @@
-"""Integration tests run against a real MongoDB (default: mongodb://localhost:27017,
-override with TEST_MONGO_URI) using a throw-away database that is dropped around
-every test. Point TEST_MONGO_URI at your MongoDB (see README).
+"""Integration tests run against a real PostgreSQL server (default: postgres@localhost:5432,
+override with the TEST_POSTGRES_* variables below) using a throw-away database that is
+dropped and recreated around every test. Never point these at a server where a database
+named ``stocksense_test`` holds anything you want to keep.
 """
 
 from __future__ import annotations
 
+import asyncio
 import os
 
 # Must be set before app.main is imported (it builds an app at import time).
 TEST_DB = "stocksense_test"
-TEST_MONGO_URI = os.environ.get("TEST_MONGO_URI", "mongodb://localhost:27017")
+TEST_PG = {
+    "host": os.environ.get("TEST_POSTGRES_HOST", "localhost"),
+    "port": int(os.environ.get("TEST_POSTGRES_PORT", "5432")),
+    "user": os.environ.get("TEST_POSTGRES_USER", "postgres"),
+    "password": os.environ.get("TEST_POSTGRES_PASSWORD", ""),
+    "ssl": os.environ.get("TEST_POSTGRES_SSLMODE", "prefer"),
+}
 os.environ.update(
     {
-        "MONGO_URI": TEST_MONGO_URI,
-        "MONGO_DB_NAME": TEST_DB,
+        "POSTGRES_HOST": TEST_PG["host"],
+        "POSTGRES_PORT": str(TEST_PG["port"]),
+        "POSTGRES_USER": TEST_PG["user"],
+        "POSTGRES_PASSWORD": TEST_PG["password"],
+        "POSTGRES_SSLMODE": TEST_PG["ssl"],
+        "POSTGRES_DB": TEST_DB,
         "JWT_SECRET_KEY": "test-secret-test-secret-test-secret-1234",
         "FIRST_ADMIN_EMAIL": "admin@example.com",
         "FIRST_ADMIN_PASSWORD": "AdminPass123!",
@@ -21,9 +33,9 @@ os.environ.update(
     }
 )
 
+import asyncpg  # noqa: E402
 import pytest  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
-from pymongo import MongoClient  # noqa: E402
 
 from app.core.config import Settings  # noqa: E402
 from app.main import create_app  # noqa: E402
@@ -32,15 +44,33 @@ ADMIN_EMAIL = "admin@example.com"
 ADMIN_PASSWORD = "AdminPass123!"
 
 
+async def _sql(database: str, query: str, *args):
+    conn = await asyncpg.connect(database=database, timeout=5, **TEST_PG)
+    try:
+        return await conn.fetch(query, *args)
+    finally:
+        await conn.close()
+
+
+def run_sql(query: str, *args) -> list:
+    """Run a statement directly against the test database (for arranging or inspecting state)."""
+    return asyncio.run(_sql(TEST_DB, query, *args))
+
+
 def _drop_db() -> None:
-    with MongoClient(TEST_MONGO_URI, serverSelectionTimeoutMS=3000) as c:
-        c.drop_database(TEST_DB)
+    # FORCE ends connections a previous test may have left open (PostgreSQL 13+).
+    asyncio.run(_sql("postgres", f'DROP DATABASE IF EXISTS "{TEST_DB}" WITH (FORCE)'))
+
+
+def _create_db() -> None:
+    asyncio.run(_sql("postgres", f'CREATE DATABASE "{TEST_DB}"'))
 
 
 @pytest.fixture
 def client():
     _drop_db()
-    with TestClient(create_app(Settings())) as c:  # runs lifespan: indexes + seed
+    _create_db()
+    with TestClient(create_app(Settings())) as c:  # runs lifespan: schema + seed
         yield c
     _drop_db()
 

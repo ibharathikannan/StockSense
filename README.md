@@ -3,7 +3,7 @@
 **Explainable stock research for beginner investors.** StockSense helps new investors discover US stocks and ETFs that match their interests and risk level, and explains *why* with plain-English reasons. It is a research and learning tool: it never gives buy or sell instructions.
 
 - **Live site:** https://stocksense-g13.azurewebsites.net
-- **Stack:** FastAPI (Python) · Next.js (React) · MongoDB Atlas · deployed on Azure
+- **Stack:** FastAPI (Python) · Next.js (React) · PostgreSQL (Azure Database for PostgreSQL) · deployed on Azure
 
 ## Project structure
 
@@ -24,7 +24,7 @@ Anyone can also create a normal account at **/register**. These are development 
 
 ## Run it locally
 
-You need **Python 3.11+**, **Node.js 20.9+**, and a **MongoDB Atlas** cluster (the free tier is enough). Run the backend and the frontend in two terminals.
+You need **Python 3.11+**, **Node.js 20.9+**, and a **PostgreSQL** database (the team's Azure server, or a local one). Run the backend and the frontend in two terminals.
 
 **1. Backend** (http://localhost:8000)
 
@@ -36,15 +36,19 @@ pip install -r requirements.txt
 cp .env.example .env                  # PowerShell: Copy-Item .env.example .env
 ```
 
-Open `backend/.env` and set your Atlas connection string, database name and a secret:
+Open `backend/.env` and set the database connection and a secret:
 
 ```ini
-MONGO_URI=mongodb+srv://<user>:<password>@<cluster>.mongodb.net
-MONGO_DB_NAME=stocksensedb
+POSTGRES_HOST=stocksensedb.postgres.database.azure.com
+POSTGRES_PORT=5432
+POSTGRES_DB=postgres
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=<the server's password>
+POSTGRES_SSLMODE=require
 JWT_SECRET_KEY=<any random string, 32+ characters>
 ```
 
-Load the stock catalogue into MongoDB once, then start the server:
+The tables are created automatically when the API starts. Load the stock catalogue once, then start the server:
 
 ```bash
 python -m scripts.import_assets
@@ -61,11 +65,20 @@ npm run dev
 
 Open http://localhost:3000 and sign in with one of the accounts above. The first sign-in for a new user goes to the **Profile** page to choose a risk level, interests and tickers to follow.
 
-> Atlas must allow your IP address (*Network Access*), or the backend cannot connect.
+> The Azure PostgreSQL server's firewall must allow your IP address (*Networking* in the portal), or the backend cannot connect.
+
+To run the backend tests you need a PostgreSQL server you can throw data away on — they drop and recreate a database named `stocksense_test`. A local Docker container is easiest:
+
+```bash
+docker run -d --name stocksense-pg -e POSTGRES_PASSWORD=localdev -p 5432:5432 postgres:16
+TEST_POSTGRES_PASSWORD=localdev pytest -q        # from backend/; also TEST_POSTGRES_HOST / _PORT / _USER / _SSLMODE
+```
+
+**Moving data from the old MongoDB database:** `python -m scripts.migrate_from_mongo` copies roles, users and profiles (see the script's docstring; assets come from `scripts.import_assets`).
 
 ## Deployment
 
-The app runs on Azure as a single container built from the root `Dockerfile`, using the same Atlas database. After pushing a new image to the registry, restart the web app:
+The app runs on Azure as a single container built from the root `Dockerfile`, using the same PostgreSQL database. The web app needs the `POSTGRES_*` settings above as App Service application settings, and the PostgreSQL firewall must allow Azure services. After pushing a new image to the registry, restart the web app:
 
 ```bash
 az webapp restart -g mlprojectdocker -n stocksense-g13

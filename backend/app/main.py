@@ -9,7 +9,7 @@ from fastapi.responses import JSONResponse
 
 from app.api.routers import assets, auth, profile, roles, users
 from app.core.config import Settings, get_settings
-from app.db.mongo import create_client, ensure_indexes, get_database
+from app.db.postgres import create_pool, ensure_schema
 from app.seed import seed_defaults
 from app.services.errors import ServiceError
 
@@ -21,14 +21,14 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     @asynccontextmanager
     async def lifespan(app: FastAPI):
-        client = create_client(settings)
-        app.state.db = get_database(client, settings)
-        await ensure_indexes(app.state.db)
-        await seed_defaults(app.state.db, settings)
+        pool = await create_pool(settings)
         try:
+            await ensure_schema(pool)
+            await seed_defaults(pool, settings)
+            app.state.db = pool
             yield
         finally:
-            await client.close()
+            await pool.close()
 
     app = FastAPI(
         title=settings.app_name,
@@ -59,7 +59,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     @app.get("/api/health", tags=["health"])
     async def health(request: Request) -> dict[str, str]:
         try:
-            await request.app.state.db.command("ping")
+            await request.app.state.db.fetchval("SELECT 1")
         except Exception:
             raise HTTPException(503, detail="Database unavailable") from None
         return {"status": "ok"}

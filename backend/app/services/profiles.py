@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from bson import ObjectId
+import uuid
 
 from app.core.onboarding import (
     ASSET_TYPE_CHOICES,
@@ -25,7 +25,7 @@ class ProfileService:
         self._profiles = profiles
         self._assets = assets
 
-    async def get(self, user_id: ObjectId) -> dict[str, Any] | None:
+    async def get(self, user_id: uuid.UUID) -> dict[str, Any] | None:
         return await self._profiles.get(user_id)
 
     async def options(self) -> dict[str, Any]:
@@ -47,7 +47,7 @@ class ProfileService:
 
     async def save(
         self,
-        user_id: ObjectId,
+        user_id: uuid.UUID,
         *,
         risk_level: str,
         interests: list[str],

@@ -60,7 +60,7 @@ async def update_user(
     updated = await service.update(
         user_id,
         payload.model_dump(exclude_unset=True),
-        actor_id=principal.user["_id"],
+        actor_id=principal.user["id"],
         actor_is_admin=principal.is_admin,
     )
     return UserOut.from_doc(updated)
@@ -72,4 +72,4 @@ async def delete_user(
     principal: Principal = Depends(require_permissions("users:delete")),
     service: UserService = Depends(get_user_service),
 ) -> None:
-    await service.delete(user_id, actor_id=principal.user["_id"], actor_is_admin=principal.is_admin)
+    await service.delete(user_id, actor_id=principal.user["id"], actor_is_admin=principal.is_admin)

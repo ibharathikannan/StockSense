@@ -1,4 +1,4 @@
-"""Load data/processed/asset_profiles.json into the MongoDB `assets` collection.
+"""Load data/processed/asset_profiles.json into the PostgreSQL `assets` table.
 
 Idempotent: assets are upserted by ticker, so re-running after refreshing the data
 updates them in place. Run from the backend/ folder with the venv active:
@@ -15,7 +15,7 @@ import sys
 from pathlib import Path
 
 from app.core.config import get_settings
-from app.db.mongo import create_client, ensure_indexes, get_database
+from app.db.postgres import create_pool, ensure_schema
 from app.repositories.assets import AssetsRepository
 
 DEFAULT_PATH = Path(__file__).resolve().parents[2] / "data" / "processed" / "asset_profiles.json"
@@ -29,16 +29,15 @@ async def main(path: Path) -> None:
         raise SystemExit(f"{path} contains no assets.")
 
     settings = get_settings()
-    client = create_client(settings)
+    pool = await create_pool(settings)
     try:
-        db = get_database(client, settings)
-        await ensure_indexes(db)  # makes sure the unique ticker index exists
-        repo = AssetsRepository(db)
+        await ensure_schema(pool)  # makes sure the assets table exists
+        repo = AssetsRepository(pool)
         inserted, updated = await repo.upsert_many(assets)
-        print(f"Database '{settings.mongo_db_name}', collection 'assets'")
+        print(f"Database '{settings.postgres_db}' on {settings.postgres_host}, table 'assets'")
         print(f"  read {len(assets)} | inserted {inserted} | updated {updated} | total now {await repo.count()}")
     finally:
-        await client.close()
+        await pool.close()
 
 
 if __name__ == "__main__":
