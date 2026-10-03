@@ -6,7 +6,7 @@ from typing import Any
 import jwt
 from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from pymongo.asynchronous.database import AsyncDatabase
+import asyncpg
 
 from app.core.config import Settings, get_settings
 from app.core.permissions import ADMIN_ROLE, effective_permissions
@@ -21,32 +21,31 @@ from app.services.users import UserService
 bearer_scheme = HTTPBearer(auto_error=False)
 
 
-def get_db(request: Request) -> AsyncDatabase:
+def get_db(request: Request) -> asyncpg.Pool:
     return request.app.state.db
 
 
-def get_users_repo(db: AsyncDatabase = Depends(get_db)) -> UsersRepository:
+def get_users_repo(db: asyncpg.Pool = Depends(get_db)) -> UsersRepository:
     return UsersRepository(db)
 
 
-def get_roles_repo(db: AsyncDatabase = Depends(get_db)) -> RolesRepository:
+def get_roles_repo(db: asyncpg.Pool = Depends(get_db)) -> RolesRepository:
     return RolesRepository(db)
 
 
-def get_assets_repo(db: AsyncDatabase = Depends(get_db)) -> AssetsRepository:
+def get_assets_repo(db: asyncpg.Pool = Depends(get_db)) -> AssetsRepository:
     return AssetsRepository(db)
 
 
-def get_profiles_repo(db: AsyncDatabase = Depends(get_db)) -> ProfilesRepository:
+def get_profiles_repo(db: asyncpg.Pool = Depends(get_db)) -> ProfilesRepository:
     return ProfilesRepository(db)
 
 
 def get_user_service(
     users: UsersRepository = Depends(get_users_repo),
     roles: RolesRepository = Depends(get_roles_repo),
-    profiles: ProfilesRepository = Depends(get_profiles_repo),
 ) -> UserService:
-    return UserService(users, roles, profiles)
+    return UserService(users, roles)
 
 
 def get_profile_service(
@@ -58,7 +57,7 @@ def get_profile_service(
 
 @dataclass
 class Principal:
-    """The authenticated caller: their user document and resolved permissions."""
+    """The authenticated caller: their user row and resolved permissions."""
 
     user: dict[str, Any]
     permissions: set[str]
@@ -83,7 +82,7 @@ async def get_current_principal(
 
     The token comes from the ``Authorization: Bearer`` header (API clients,
     Swagger) or, failing that, the httpOnly cookie set at login (the browser
-    app). The user and their role are re-read from MongoDB on every request,
+    app). The user and their role are re-read from the database on every request,
     so deactivating a user or editing a role takes effect immediately.
     """
     token = credentials.credentials if credentials else request.cookies.get(settings.cookie_name)

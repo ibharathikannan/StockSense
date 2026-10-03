@@ -1,9 +1,8 @@
 from __future__ import annotations
 
 import pytest
-from pymongo import MongoClient
 
-from conftest import TEST_DB, TEST_MONGO_URI, login, make_user
+from conftest import login, make_user, run_sql
 
 ASSETS = [
     {"ticker": "NVDA", "name": "NVIDIA Corporation", "asset_type": "stock", "sector": "Information Technology",
@@ -26,9 +25,13 @@ PROFILE = {
 
 @pytest.fixture
 def seeded(client):
-    """The test app with a few assets in the `assets` collection."""
-    with MongoClient(TEST_MONGO_URI, serverSelectionTimeoutMS=5000) as mongo:
-        mongo[TEST_DB]["assets"].insert_many([dict(a) for a in ASSETS])
+    """The test app with a few assets in the `assets` table."""
+    for a in ASSETS:
+        run_sql(
+            "INSERT INTO assets (ticker, name, asset_type, sector, themes, recommendation_eligible)"
+            " VALUES ($1, $2, $3, $4, $5, $6)",
+            a["ticker"], a["name"], a["asset_type"], a["sector"], a["themes"], a["recommendation_eligible"],
+        )
     return client
 
 
@@ -105,6 +108,7 @@ def test_asset_search_matches_ticker_prefix_and_name(seeded, admin):
     assert tickers("nv") == ["NVDA"]
     assert tickers("solar") == ["FSLR"]  # name match
     assert tickers("hide") == []  # not recommendable, so never offered
+    assert tickers("%") == tickers("_") == []  # SQL wildcards are matched literally
     assert seeded.get("/api/assets/search?q=", headers=admin).status_code == 422
 
 
@@ -112,7 +116,6 @@ def test_deleting_a_user_removes_their_profile(seeded, admin):
     user = make_user(seeded, admin, "gone@example.com")
     gone = login(seeded, "gone@example.com", "Passw0rd!x")
     seeded.put("/api/profile", headers=gone, json=PROFILE)
-    with MongoClient(TEST_MONGO_URI, serverSelectionTimeoutMS=5000) as mongo:
-        assert mongo[TEST_DB]["profiles"].count_documents({}) == 1
-        assert seeded.delete(f"/api/users/{user['id']}", headers=admin).status_code == 204
-        assert mongo[TEST_DB]["profiles"].count_documents({}) == 0
+    assert run_sql("SELECT count(*) FROM profiles")[0][0] == 1
+    assert seeded.delete(f"/api/users/{user['id']}", headers=admin).status_code == 204
+    assert run_sql("SELECT count(*) FROM profiles")[0][0] == 0

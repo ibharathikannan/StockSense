@@ -3,8 +3,8 @@
 Single source of truth: the API validates against these lists, the frontend renders them
 (via GET /api/profile/options), and the recommender maps interests to assets with them.
 
-Interests are defined in terms of the `sector` and `themes` fields of the `assets`
-collection (see data/asset_universe.csv), so every chip is backed by real assets.
+Interests are defined in terms of the `sector` and `themes` columns of the `assets`
+table (see data/asset_universe.csv), so every chip is backed by real assets.
 """
 
 from __future__ import annotations

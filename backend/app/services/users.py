@@ -2,13 +2,13 @@ from __future__ import annotations
 
 from typing import Any
 
-from bson import ObjectId
-from pymongo.errors import DuplicateKeyError
+import uuid
+
+import asyncpg
 from starlette.concurrency import run_in_threadpool
 
 from app.core.permissions import ADMIN_ROLE
 from app.core.security import hash_password
-from app.repositories.profiles import ProfilesRepository
 from app.repositories.roles import RolesRepository
 from app.repositories.users import UsersRepository
 from app.services.errors import BadRequest, Conflict, Forbidden, NotFound
@@ -22,10 +22,9 @@ class UserService:
     acting user's id/admin flag as plain values — no dependency on the HTTP layer.
     """
 
-    def __init__(self, users: UsersRepository, roles: RolesRepository, profiles: ProfilesRepository) -> None:
+    def __init__(self, users: UsersRepository, roles: RolesRepository) -> None:
         self._users = users
         self._roles = roles
-        self._profiles = profiles
 
     # ---- reads -------------------------------------------------------------
 
@@ -70,17 +69,17 @@ class UserService:
                 role=role,
                 is_active=is_active,
             )
-        except DuplicateKeyError:
+        except asyncpg.UniqueViolationError:
             raise Conflict("A user with this email already exists") from None
 
     async def update(
-        self, user_id: str, changes: dict[str, Any], *, actor_id: ObjectId, actor_is_admin: bool
+        self, user_id: str, changes: dict[str, Any], *, actor_id: uuid.UUID, actor_is_admin: bool
     ) -> dict[str, Any]:
         """Apply a partial update. ``changes`` may contain full_name, role, is_active, password."""
         target = await self.get(user_id)
         changes = {k: v for k, v in changes.items() if v is not None}
 
-        is_self = target["_id"] == actor_id
+        is_self = target["id"] == actor_id
         new_role = changes.get("role", target["role"])
         role_changes = new_role != target["role"]
         deactivating = changes.get("is_active") is False and target.get("is_active", True)
@@ -103,15 +102,14 @@ class UserService:
             return target
         return await self._users.update(user_id, changes)  # type: ignore[return-value]
 
-    async def delete(self, user_id: str, *, actor_id: ObjectId, actor_is_admin: bool) -> None:
+    async def delete(self, user_id: str, *, actor_id: uuid.UUID, actor_is_admin: bool) -> None:
         target = await self.get(user_id)
-        if target["_id"] == actor_id:
+        if target["id"] == actor_id:
             raise BadRequest("You can't delete your own account")
         if target["role"] == ADMIN_ROLE and not actor_is_admin:
             raise Forbidden("Only administrators can delete administrators")
         await self._assert_not_last_admin(target)
-        await self._users.delete(user_id)
-        await self._profiles.delete_for_user(target["_id"])  # don't leave an orphaned profile
+        await self._users.delete(user_id)  # the profile goes with it (ON DELETE CASCADE)
 
     # ---- rules -------------------------------------------------------------
 

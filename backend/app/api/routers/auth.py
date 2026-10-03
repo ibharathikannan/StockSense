@@ -24,7 +24,7 @@ async def _start_session(
     user: dict, response: Response, settings: Settings, roles: RolesRepository
 ) -> TokenResponse:
     """Issue the JWT + httpOnly cookie for `user` (shared by login and register)."""
-    token = create_access_token(str(user["_id"]), settings)
+    token = create_access_token(str(user["id"]), settings)
     max_age = settings.jwt_expire_minutes * 60
     response.set_cookie(
         settings.cookie_name,
@@ -56,7 +56,7 @@ async def login(
     if not user.get("is_active", True):
         raise HTTPException(status.HTTP_403_FORBIDDEN, detail="Account is disabled")
 
-    await users.touch_last_login(user["_id"])
+    await users.touch_last_login(user["id"])
     return await _start_session(user, response, settings, roles)
 
 
@@ -80,7 +80,7 @@ async def register(
         password=payload.password,
         role=DEFAULT_ROLE,
     )
-    await users.touch_last_login(user["_id"])
+    await users.touch_last_login(user["id"])
     return await _start_session(user, response, settings, roles)
 
 
@@ -113,4 +113,4 @@ async def change_password(
         raise HTTPException(status.HTTP_400_BAD_REQUEST, detail="New password must differ from the current one")
 
     new_hash = await run_in_threadpool(hash_password, payload.new_password)
-    await users.update(str(user["_id"]), {"password_hash": new_hash})
+    await users.update(user["id"], {"password_hash": new_hash})

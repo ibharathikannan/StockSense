@@ -4,8 +4,8 @@
 
 StockSense is a stock-intelligence project with two deliberately separate areas:
 
-- A full-stack web application built with FastAPI, Next.js, and MongoDB Atlas. The current runtime provides authentication, registration, user administration, roles, and permission-based access control.
-- An offline pipeline that collects prices, macroeconomic data, SEC filings and market news, and prepares numeric/text inputs for future forecasting and explanations.
+- A full-stack web application built with FastAPI, Next.js, and PostgreSQL (Azure Database for PostgreSQL). The current runtime provides authentication, registration, user administration, roles, and permission-based access control.
+- An offline market-data pipeline that downloads price and macroeconomic data and builds time-series features for future forecasting work.
 
 Model training, model serving, forecasts in the web application, portfolio management, brokerage integration, and trade execution are not implemented yet. Do not invent or add these capabilities unless the task explicitly expands the scope. This project must not present output as personalized financial advice.
 
@@ -19,11 +19,11 @@ Read the root `README.md` before broad changes. Read `frontend/README.md` or `da
 - `app/api/routers/` is the HTTP layer. Keep request handling and response mapping thin.
 - `app/schemas/` defines request and response validation.
 - `app/services/` owns reusable business rules and domain errors.
-- `app/repositories/` owns MongoDB queries and persistence details.
+- `app/repositories/` owns SQL queries (asyncpg) and persistence details.
 - `app/core/` owns configuration, permissions, and security primitives.
-- `app/db/` owns MongoDB client and database setup.
+- `app/db/` owns the connection pool and the table schema (idempotent `CREATE ... IF NOT EXISTS`, applied at startup).
 
-Preserve the routing-to-business-logic-to-persistence direction. Do not put MongoDB queries in routers or duplicate business rules across endpoints. Introduce a new abstraction only when it creates a real seam or removes repeated complexity; prefer small interfaces with substantial behavior behind them.
+Preserve the routing-to-business-logic-to-persistence direction. Do not put SQL queries in routers or duplicate business rules across endpoints. Introduce a new abstraction only when it creates a real seam or removes repeated complexity; prefer small interfaces with substantial behavior behind them.
 
 FastAPI is the security boundary. Authorization must be enforced by backend dependencies and business rules. Frontend visibility checks are user-experience controls only.
 
@@ -116,7 +116,7 @@ From `backend/` with its virtual environment active:
 pytest -q
 ```
 
-The integration suite drops the database named `stocksense_test` before and after tests. Never point `TEST_MONGO_URI` at a cluster where that database contains valuable data. Do not run the suite until the target is known to be a safe test instance.
+The integration suite drops the database named `stocksense_test` before and after tests. Never point the `TEST_POSTGRES_*` variables at a server where that database contains valuable data. Do not run the suite until the target is known to be a safe test instance.
 
 ### Frontend
 
