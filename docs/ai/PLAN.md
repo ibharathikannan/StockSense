@@ -110,8 +110,8 @@ as part of collection/preparation.
 ## Shared-data direction: Azure PostgreSQL
 
 The user has authorized migration of existing local market datasets and SEC/news
-text into their Azure PostgreSQL instance. This replaces the earlier LanceDB
-private API/VM direction. MongoDB remains the web application's database.
+text into their Azure PostgreSQL instance. MongoDB remains the web application's
+database.
 
 The authorized migration adds connection configuration, typed numeric tables,
 queryable documents/chunks with complete JSONB payloads, immutable snapshots,
@@ -119,10 +119,10 @@ original-file archives, resumable imports and verification. It reads existing
 artifacts without downloading providers' data or regenerating preparation outputs.
 See `data/SHARED_DATA.md` for commands, storage mapping and verification limits.
 
-The separate optional PostgreSQL dependency does not replace the retained local
-LanceDB helpers. Preserve local originals and committed baselines until verified
-migration. A successful local implementation check does not establish that a
-remote migration occurred; actual import requires configured credentials.
+PostgreSQL is the shared-data storage implementation. Preserve local originals
+and committed baselines until verified migration. A successful local implementation
+check does not establish that a remote migration occurred; actual import requires
+configured credentials.
 
 This migration does not authorize embeddings, pgvector/BM25 indexes, RAG generation,
 forecasting, the independent data-readiness gate, web integration or deployment.
@@ -140,3 +140,20 @@ forecasting, the independent data-readiness gate, web integration or deployment.
   tests and a regression for Azure's different text collation.
 - The migration is complete. Embedding generation and RAG remain the next separate
   phase; no models, vector indexes, product integration or deployment were added.
+
+## Forecast preprocessing sequence (future authorized phase)
+
+After the independent data gate and any required fixes, define chronological
+training/validation/test folds with controls for overlapping 10-session labels.
+Build the preprocessing pipeline before training forecast models. Within each
+fold, fit imputation, categorical handling, scaling and optional PCA only on the
+training portion; reuse those fitted transforms for validation/test and inference.
+Tune component counts using training/validation only, and retain an original-feature
+comparison. Persist preprocessing with the corresponding model and dataset version.
+
+Linear discriminant analysis requires class labels and is not directly applicable
+to the current continuous-return target. Consider it only for an explicitly defined
+classification experiment. Topic-model LDA is a separate text experiment, not a
+required numeric forecasting or RAG preparation step. Neither PCA nor LDA is fitted
+as a global preprocessing step before temporal splitting. This sequencing note does
+not authorize the data gate, learned preprocessing or forecast training.

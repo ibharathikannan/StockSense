@@ -63,8 +63,7 @@ python3 -m pip install -r data/requirements-postgres.txt
 ```
 
 The PostgreSQL driver is optional and separate from collection dependencies.
-`data/requirements-storage.txt` and the legacy local LanceDB helpers remain
-available, but are not used by the PostgreSQL commands.
+PostgreSQL is the shared-data storage implementation.
 
 Your existing Azure connection uses `sslmode=require`, which is supported for
 this migration and does not need a certificate bundle configured by the importer.

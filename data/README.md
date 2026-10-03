@@ -311,6 +311,5 @@ python3 -m data.shared_data postgres-verify --source-root data --prompt-password
 The importer preserves immutable snapshots and can resume incomplete uploads.
 Keep original files and committed baselines until verification succeeds. CSV
 convenience copies are redundant and excluded; the asset universe CSV is imported.
-The legacy local LanceDB helpers and `data/requirements-storage.txt` remain
-available, but are not used for this migration. Embeddings, vector indexes and
-RAG generation are not implemented by these commands.
+Embeddings, vector indexes and RAG generation are not implemented by these
+commands.
