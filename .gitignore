@@ -14,6 +14,8 @@ __pycache__/
 *.py[cod]
 .venv-data/
 data/.cache/
+data/artifacts/
+.pytest_cache/
 
 # Parquet is the shared dataset format. CSV copies are generated locally with
 # data/convert_parquet_to_csv.py and are not committed.

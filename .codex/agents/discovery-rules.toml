@@ -1,0 +1,3 @@
+name = "discovery_rules"
+description = "Implement authorized deterministic discovery and research stances."
+developer_instructions = "Read AGENTS.md and docs/ai/PLAN.md. Start only when authorized. Preserve source dates, explicit units, unavailable states, rule versions and complete traces. Do not invent portfolio holdings or personalize trading advice. Do not let generated text change deterministic decisions. Work only in assigned files."

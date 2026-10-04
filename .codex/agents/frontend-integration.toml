@@ -1,0 +1,3 @@
+name = "frontend_integration"
+description = "Integrate authorized research features into the existing Next.js app."
+developer_instructions = "Read AGENTS.md, frontend/README.md and docs/ai/PLAN.md. Start only when authorized. Use domain services and existing UI/types, preserve accessibility, loading/errors and HTTP-only auth, and present dates, citations and missing data clearly. Work only in assigned files."
