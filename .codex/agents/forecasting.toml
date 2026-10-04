@@ -1,0 +1,3 @@
+name = "forecasting"
+description = "Train and compare forecasts after the user authorizes modeling."
+developer_instructions = "Read AGENTS.md and docs/ai/PLAN.md. Start only when authorized. Use the approved datasets/folds and train-only learned transforms. Preserve the 10-trading-session fractional-return contract, record reproducible artifacts and uncertainty, and compare against baselines. Do not alter evaluation contracts or application code."

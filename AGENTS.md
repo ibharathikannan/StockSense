@@ -4,7 +4,7 @@
 
 StockSense is a stock-intelligence project with two deliberately separate areas:
 
-- A full-stack web application built with FastAPI, Next.js, and MongoDB Atlas. The current runtime provides authentication, registration, user administration, roles, and permission-based access control.
+- A full-stack web application built with FastAPI, Next.js, and PostgreSQL (Azure Database for PostgreSQL). The current runtime provides authentication, registration, user administration, roles, and permission-based access control.
 - An offline market-data pipeline that downloads price and macroeconomic data and builds time-series features for future forecasting work.
 
 Model training, model serving, forecasts in the web application, portfolio management, brokerage integration, and trade execution are not implemented yet. Do not invent or add these capabilities unless the task explicitly expands the scope. This project must not present output as personalized financial advice.
@@ -19,11 +19,11 @@ Read the root `README.md` before broad changes. Read `frontend/README.md` or `da
 - `app/api/routers/` is the HTTP layer. Keep request handling and response mapping thin.
 - `app/schemas/` defines request and response validation.
 - `app/services/` owns reusable business rules and domain errors.
-- `app/repositories/` owns MongoDB queries and persistence details.
+- `app/repositories/` owns SQL queries (asyncpg) and persistence details.
 - `app/core/` owns configuration, permissions, and security primitives.
-- `app/db/` owns MongoDB client and database setup.
+- `app/db/` owns the connection pool and the table schema (idempotent `CREATE ... IF NOT EXISTS`, applied at startup).
 
-Preserve the routing-to-business-logic-to-persistence direction. Do not put MongoDB queries in routers or duplicate business rules across endpoints. Introduce a new abstraction only when it creates a real seam or removes repeated complexity; prefer small interfaces with substantial behavior behind them.
+Preserve the routing-to-business-logic-to-persistence direction. Do not put SQL queries in routers or duplicate business rules across endpoints. Introduce a new abstraction only when it creates a real seam or removes repeated complexity; prefer small interfaces with substantial behavior behind them.
 
 FastAPI is the security boundary. Authorization must be enforced by backend dependencies and business rules. Frontend visibility checks are user-experience controls only.
 
@@ -42,7 +42,8 @@ Keep backend calls out of presentational components when a domain service is the
 
 - The data pipeline is offline and is not a runtime dependency of the web application.
 - Collection, macro-data download, feature construction, and format conversion remain separate steps.
-- Parquet files are the shared datasets; CSV files are local convenience copies unless documentation says otherwise.
+- Parquet files retain the numeric dataset schemas; CSV files are local convenience copies.
+- Shared offline data is being migrated to Azure PostgreSQL: numeric Parquet datasets become typed SQL tables, prepared documents/chunks retain text and JSONB provenance, and original inventoried files are archived by default. See `data/SHARED_DATA.md` for the separate migration commands and connection setup. MongoDB remains the application database. Preserve original files, provenance and committed baselines until verified migration; embedding generation and retrieval remain separate work.
 - Time-series evaluation must avoid future leakage. Fit learned preprocessing on training folds only and do not replace walk-forward validation with random train/test splits.
 
 Do not download external data, overwrite committed datasets, or regenerate large artifacts unless the task explicitly requires it. Preserve dataset schemas unless a coordinated schema change is part of the request.
@@ -56,6 +57,30 @@ Do not download external data, overwrite committed datasets, or regenerate large
 Never commit, push, publish an image, deploy, restart Azure resources, or change repository/cloud settings unless the user explicitly requests that action.
 
 ## Scope and change discipline
+
+### AI orchestration
+
+For substantial AI work, the lead agent acts as orchestrator: inspect the current
+repository, define shared contracts and dependencies, then delegate independent
+tasks to at most three concurrent subagents. Assign exclusive file ownership.
+Use read-only investigations when ownership would overlap; do not delegate tiny
+tasks or let subagents spawn additional agents without coordination.
+
+The lead owns architecture, shared interfaces, dependency changes, integration,
+diff review, and final validation. Agents report changed files, commands run,
+results, source coverage, and remaining blockers. Never overwrite another
+agent's or the user's work. Run memory-intensive local model jobs sequentially.
+
+Read `docs/ai/PLAN.md` for the active phase, ownership, and stop point. Complete
+only the authorized phase; an implementation check is not authorization to start
+an independent data-readiness gate, forecasting, RAG, or product integration.
+
+Keep source timestamps, revisions, ticker mappings, citations, and collection
+outcomes with collected data. Missing or failed collection is not neutral
+sentiment. Fit learned preprocessing only within later training folds. Keep
+local corpora, model weights, and candidate outputs under ignored storage. Shared
+data will be queried from Azure PostgreSQL after verified migration; model
+caches and quota ledgers remain local. Preserve committed baselines until then.
 
 - Implement only the requested outcome and the minimum supporting changes needed for a complete solution.
 - Preserve existing behavior unless the request explicitly changes it.
@@ -91,7 +116,7 @@ From `backend/` with its virtual environment active:
 pytest -q
 ```
 
-The integration suite drops the database named `stocksense_test` before and after tests. Never point `TEST_MONGO_URI` at a cluster where that database contains valuable data. Do not run the suite until the target is known to be a safe test instance.
+The integration suite drops the database named `stocksense_test` before and after tests. Never point the `TEST_POSTGRES_*` variables at a server where that database contains valuable data. Do not run the suite until the target is known to be a safe test instance.
 
 ### Frontend
 

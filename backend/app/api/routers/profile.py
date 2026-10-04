@@ -25,7 +25,7 @@ async def get_profile(
     service: ProfileService = Depends(get_profile_service),
 ) -> ProfileOut | None:
     """The caller's profile, or null if they haven't completed onboarding yet."""
-    doc = await service.get(principal.user["_id"])
+    doc = await service.get(principal.user["id"])
     return ProfileOut.from_doc(doc) if doc else None
 
 
@@ -37,7 +37,7 @@ async def save_profile(
 ) -> ProfileOut:
     """Create the profile (completing onboarding) or replace its answers."""
     doc = await service.save(
-        principal.user["_id"],
+        principal.user["id"],
         risk_level=payload.risk_level,
         interests=payload.interests,
         asset_types=payload.asset_types,

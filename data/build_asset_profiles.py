@@ -3,7 +3,7 @@
 
 Reads asset_universe.csv and raw/historical_prices.parquet and writes
 processed/asset_profiles.json, which backend/scripts/import_assets.py loads into
-the MongoDB `assets` collection. Index rows (^VIX) are context only and skipped.
+the PostgreSQL `assets` table. Index rows (^VIX) are context only and skipped.
 
 Risk features use the latest 252 trading days (about one year):
   volatility_1y     annualised standard deviation of daily returns

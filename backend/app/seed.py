@@ -2,8 +2,7 @@ from __future__ import annotations
 
 import logging
 
-from pymongo.asynchronous.database import AsyncDatabase
-from pymongo.errors import DuplicateKeyError
+import asyncpg
 from starlette.concurrency import run_in_threadpool
 
 from app.core.config import Settings
@@ -30,7 +29,7 @@ SYSTEM_ROLES = [
 ]
 
 
-async def seed_defaults(db: AsyncDatabase, settings: Settings) -> None:
+async def seed_defaults(db: asyncpg.Pool, settings: Settings) -> None:
     """Idempotent bootstrap, run at every startup."""
     roles = RolesRepository(db)
     for role in SYSTEM_ROLES:
@@ -38,7 +37,7 @@ async def seed_defaults(db: AsyncDatabase, settings: Settings) -> None:
             try:
                 await roles.create(is_system=True, created_by="system", **role)
                 logger.info("Created system role '%s'", role["name"])
-            except DuplicateKeyError:  # another worker won the race
+            except asyncpg.UniqueViolationError:  # another worker won the race
                 pass
 
     users = UsersRepository(db)
@@ -56,5 +55,5 @@ async def seed_defaults(db: AsyncDatabase, settings: Settings) -> None:
             role=ADMIN_ROLE,
         )
         logger.info("Created first administrator %s — change this password after signing in", settings.first_admin_email)
-    except DuplicateKeyError:
+    except asyncpg.UniqueViolationError:
         pass

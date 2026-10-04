@@ -1,0 +1,2 @@
+# Optional offline migration driver; install alongside data/requirements.txt.
+psycopg[binary]==3.3.6

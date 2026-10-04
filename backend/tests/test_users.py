@@ -47,7 +47,7 @@ def test_user_crud_and_pagination_search(client, admin):
     assert patched["full_name"] == "Renamed"
     assert client.delete(f"/api/users/{uid}", headers=admin).status_code == 204
     assert client.get(f"/api/users/{uid}", headers=admin).status_code == 404
-    assert client.get("/api/users/not-an-object-id", headers=admin).status_code == 404
+    assert client.get("/api/users/not-a-uuid", headers=admin).status_code == 404
 
 
 def test_duplicate_email_and_unknown_role(client, admin):

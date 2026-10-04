@@ -15,8 +15,13 @@ class Settings(BaseSettings):
     app_name: str = "StockSense API"
     environment: Literal["development", "production"] = "development"
 
-    mongo_uri: str = "mongodb://localhost:27017"
-    mongo_db_name: str = "stocksense"
+    postgres_host: str = "localhost"
+    postgres_port: int = 5432
+    postgres_db: str = "stocksense"
+    postgres_user: str = "postgres"
+    postgres_password: str = ""
+    # libpq-style sslmode; Azure Database for PostgreSQL requires "require" (or stricter).
+    postgres_sslmode: Literal["disable", "allow", "prefer", "require", "verify-ca", "verify-full"] = "prefer"
 
     jwt_secret_key: str = Field(min_length=32)
     jwt_algorithm: str = "HS256"
