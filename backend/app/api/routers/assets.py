@@ -47,14 +47,20 @@ async def evaluate_asset_stance(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail=f"No volatility available for '{clean_ticker}'. Provide it in the request.",
         )
-
-    evaluation = evaluate_stock_stance(
-        forecast_return=payload.forecast_return,
-        volatility=effective_volatility,
-        sentiment_score=payload.sentiment_score,
-        prediction_interval_width=payload.prediction_interval_width,
-        user_risk_profile=payload.user_risk_profile or "moderate",
-    )
+    
+    try:
+        evaluation = evaluate_stock_stance(
+            forecast_return=payload.forecast_return,
+            volatility=effective_volatility,
+            sentiment_score=payload.sentiment_score,
+            prediction_interval_width=payload.prediction_interval_width,
+            user_risk_profile=payload.user_risk_profile or "moderate",
+        )
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=str(exc),
+        ) from exc
 
     return AssetStanceResponse(
         ticker=clean_ticker,
