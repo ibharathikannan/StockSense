@@ -41,7 +41,12 @@ async def evaluate_asset_stance(
 
     effective_volatility = payload.volatility
     if effective_volatility is None:
-        effective_volatility = asset.get("volatility") or asset.get("annualized_volatility", 0.25)
+        effective_volatility = (asset.get("risk") or {}).get("volatility_1y")
+    if effective_volatility is None:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=f"No volatility available for '{clean_ticker}'. Provide it in the request.",
+        )
 
     evaluation = evaluate_stock_stance(
         forecast_return=payload.forecast_return,
