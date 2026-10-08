@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 from functools import lru_cache
+from pathlib import Path
 from typing import Literal
 
-from pydantic import Field, model_validator
+from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 SAMPLE_SECRET_PREFIX = "dev-only-secret"
@@ -37,6 +38,15 @@ class Settings(BaseSettings):
 
     # Public self-signup at POST /api/auth/register. Set false so only admins can create users.
     allow_registration: bool = True
+
+    # Offline, validated CSV/JSON forecast export. No training or pickle loading
+    # occurs in the API process. Leave unset to report forecasts unavailable.
+    forecast_results_dir: Path | None = None
+
+    @field_validator("forecast_results_dir", mode="before")
+    @classmethod
+    def _empty_forecast_directory(cls, value):
+        return None if isinstance(value, str) and not value.strip() else value
 
     api_host: str = "0.0.0.0"
     api_port: int = 8000

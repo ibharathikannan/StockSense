@@ -1,5 +1,16 @@
 # StockSense data pipeline
 
+## Experimental forecasting
+
+The separately authorized offline forecasting module now supports price-only
+relative features, XGBoost with Ridge and mean/median benchmarks, purged chronological
+selection, empirical uncertainty calibration and saved-model prediction.
+See [FORECASTING.md](FORECASTING.md) for commands and limits. It reads existing
+local or pinned read-only PostgreSQL inputs; it does not regenerate datasets or
+refresh providers. A separate authenticated web adapter displays saved results
+only for explicitly selected tickers. Generated models and snapshot forecasts
+stay local under ignored storage.
+
 Each step has its own script so that price collection, macro collection, and
 feature engineering can be run and understood independently.
 
@@ -148,8 +159,9 @@ The AI worktree adds offline collection and preparation commands. The current
 collection/preparation and shared migration are complete. The independently
 authorized data gate has completed with conditions; see
 [`docs/ai/DATA_GATE.md`](../docs/ai/DATA_GATE.md). Forecast-model training, learned
-preprocessing, retrieval indexes, RAG generation and rule-engine integration
-have not started. Agent ownership and the handoff live in
+preprocessing are now covered by the separately authorized forecasting phase;
+retrieval indexes, RAG generation and rule-engine integration have not started.
+Agent ownership and the handoff live in
 [`docs/ai/PLAN.md`](../docs/ai/PLAN.md).
 
 New corpora and candidate datasets go under ignored `data/artifacts/`; model

@@ -78,6 +78,15 @@ TEST_POSTGRES_PASSWORD=localdev pytest -q        # from backend/; also TEST_POST
 
 ## Shared market and document data
 
+### Experimental selected-stock forecasts
+
+The authenticated `/forecasts?tickers=AAPL,NVDA` page shows saved 10-session
+return estimates and uncertainty intervals only for the supplied research
+shortlist. Set backend `FORECAST_RESULTS_DIR` to a completed offline forecast
+export directory; see [the forecasting guide](data/FORECASTING.md) for training,
+testing and the content-recommender handoff. The current snapshot is historical
+and stale. No model training or price download runs inside the web request.
+
 Local Parquet datasets and prepared SEC/news text can be imported into Azure
 PostgreSQL as queryable tables, with an optional archive of original files.
 See [the shared-data guide](data/SHARED_DATA.md) for setup, import and verification.

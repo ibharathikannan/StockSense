@@ -1,5 +1,46 @@
 # AI work plan
 
+## Subsequent authorization — 2026-10-08
+
+The user authorized repository implementation of the selected forecasting
+approach and uncertainty outputs. This supersedes the gate-only stop point for
+the bounded offline price-only forecasting phase. Implement the 27 relative
+predictors, XGBoost/Ridge/mean/median selection, training-only preprocessing, purged
+inner/calibration/evaluation windows, persisted local bundles and read-only
+local/shared PostgreSQL input adapters. See `data/FORECASTING.md`.
+
+Ownership: the lead owns modeling, CLI, integration and docs; two workers own
+input preparation/source adapters and their tests; independent validation owns
+model tests. Source tables/baselines are preserved. Artifacts stay ignored and
+no provider refresh is performed. The user subsequently requested XGBoost as
+the application model. Its default selection compares 1/10/50 boosting rounds
+on inner MAE, with RMSE as tie-breaker; baselines remain diagnostic comparisons.
+Current-direction results do not establish a learned advantage.
+
+The user later authorized stronger XGBoost training with yearly walk-forward
+validation, bounded hyperparameter search and independent interval calibration.
+`data/forecasting/walkforward.py` evaluates 2024/2025/partial2026; initial training
+history is insufficient for the same 2023 fold with the retained 252-row minimum.
+It refits inner-selected parameters before calibration and compares Ridge and
+separately calibrated constants on identical later rows. All results remain
+retrospective and do not establish directional skill. No downloads or production
+configuration changes are included in this extension.
+
+The user subsequently authorized web integration on the same date and specified
+that only tickers selected by the content-based recommender receive web forecast
+results. Add an authenticated selected-ticker API and frontend results view,
+reading validated precomputed outputs without training or loading pickle in the
+web process. No content-based recommender implementation exists in this checkout;
+provide an explicit shortlist handoff contract rather than inventing selections.
+
+This phase does not authorize a Transformer, macro/text modeling, RAG, new
+recommendation algorithms, database schema writes, deployment, or a Git push.
+Stop after locally verified integration. The user explicitly requires testing
+before any commit; current changes remain uncommitted.
+
+The sections below retain the history of earlier independent authorizations;
+their gate-only prohibitions do not override this later user request.
+
 ## Authorized work and stop point
 
 Collection, preparation and shared-data migration are complete. On 2026-10-03

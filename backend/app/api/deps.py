@@ -12,10 +12,12 @@ from app.core.config import Settings, get_settings
 from app.core.permissions import ADMIN_ROLE, effective_permissions
 from app.core.security import decode_access_token
 from app.repositories.assets import AssetsRepository
+from app.repositories.forecasts import ForecastRepository
 from app.repositories.profiles import ProfilesRepository
 from app.repositories.roles import RolesRepository
 from app.repositories.users import UsersRepository
 from app.services.profiles import ProfileService
+from app.services.forecasts import ForecastService
 from app.services.users import UserService
 
 bearer_scheme = HTTPBearer(auto_error=False)
@@ -53,6 +55,10 @@ def get_profile_service(
     assets: AssetsRepository = Depends(get_assets_repo),
 ) -> ProfileService:
     return ProfileService(profiles, assets)
+
+
+def get_forecast_service(settings: Settings = Depends(get_settings)) -> ForecastService:
+    return ForecastService(ForecastRepository(settings.forecast_results_dir))
 
 
 @dataclass
