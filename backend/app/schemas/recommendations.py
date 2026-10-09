@@ -93,6 +93,16 @@ class Diversification(BaseModel):
     diversifying_tickers: list[str] = Field(default_factory=list)
 
 
+class DiversificationNote(BaseModel):
+    """Request-time diversification view computed from the user's followed assets."""
+
+    sector_exposure: dict[str, float] = Field(default_factory=dict)
+    dominant_sector: str | None = None
+    concentrated: bool = False
+    warning: str | None = None
+    diversifying_tickers: list[str] = Field(default_factory=list)
+
+
 class RecommendationSnapshot(BaseModel):
     """The single object every dashboard view reads.
 
@@ -138,3 +148,10 @@ class RecommendationSnapshot(BaseModel):
             evidence=[Evidence(**e) for e in (row.get("evidence") or [])],
             explanation=Explanation(**(row.get("explanation") or {"text": ""})),
         )
+
+
+class DiscoveryResponse(BaseModel):
+    """The personalised discovery screen: ranked candidate snapshots + a diversification note."""
+
+    candidates: list[RecommendationSnapshot] = Field(default_factory=list)
+    diversification: DiversificationNote
