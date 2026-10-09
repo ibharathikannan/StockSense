@@ -7,6 +7,7 @@ from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 SAMPLE_SECRET_PREFIX = "dev-only-secret"
+MAX_RECOMMENDATIONS = 20
 
 
 class Settings(BaseSettings):
@@ -37,6 +38,9 @@ class Settings(BaseSettings):
 
     # Public self-signup at POST /api/auth/register. Set false so only admins can create users.
     allow_registration: bool = True
+
+    # Suggestions returned by GET /api/recommendations when the request has no ?limit=.
+    recommendations_limit: int = Field(10, ge=1, le=MAX_RECOMMENDATIONS)
 
     api_host: str = "0.0.0.0"
     api_port: int = 8000

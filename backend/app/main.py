@@ -7,7 +7,7 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from app.api.routers import assets, auth, profile, roles, users
+from app.api.routers import assets, auth, dashboard, profile, recommendations, roles, users
 from app.core.config import Settings, get_settings
 from app.db.postgres import create_pool, ensure_schema
 from app.seed import seed_defaults
@@ -70,6 +70,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(roles.router)
     app.include_router(profile.router)
     app.include_router(assets.router)
+    app.include_router(recommendations.router)
+    app.include_router(dashboard.router)
 
     return app
 
