@@ -1,0 +1,13 @@
+# RAG / decision-explanation layer (offline batch). Keep heavy ML libraries out of
+# the web runtime; install into the data virtualenv:
+#   pip install -r data/requirements-rag.txt
+#
+# Embeddings reuse the preparation stack (transformers + torch) with the model that
+# already tokenizes the corpus: sentence-transformers/all-MiniLM-L6-v2 (384-dim).
+-r requirements-preparation.txt   # transformers, torch, safetensors, pytest, numpy, pandas...
+-r requirements-postgres.txt      # psycopg[binary] driver for stocksense_data + app DB
+
+# Vector store + local generation. Versions are provisional — re-pin from `pip freeze`
+# after the first successful install in the data virtualenv.
+pgvector>=0.3,<0.4                 # registers the pgvector type with psycopg
+ollama>=0.3,<1.0                   # client for the local Ollama model used in generation
