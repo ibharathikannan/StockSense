@@ -15,7 +15,9 @@ from app.repositories.assets import AssetsRepository
 from app.repositories.profiles import ProfilesRepository
 from app.repositories.roles import RolesRepository
 from app.repositories.users import UsersRepository
+from app.services.dashboard import DashboardService
 from app.services.profiles import ProfileService
+from app.services.recommendations import RecommendationService
 from app.services.users import UserService
 
 bearer_scheme = HTTPBearer(auto_error=False)
@@ -53,6 +55,20 @@ def get_profile_service(
     assets: AssetsRepository = Depends(get_assets_repo),
 ) -> ProfileService:
     return ProfileService(profiles, assets)
+
+
+def get_recommendation_service(
+    profiles: ProfilesRepository = Depends(get_profiles_repo),
+    assets: AssetsRepository = Depends(get_assets_repo),
+) -> RecommendationService:
+    return RecommendationService(profiles, assets)
+
+
+def get_dashboard_service(
+    profiles: ProfilesRepository = Depends(get_profiles_repo),
+    assets: AssetsRepository = Depends(get_assets_repo),
+) -> DashboardService:
+    return DashboardService(profiles, assets)
 
 
 @dataclass

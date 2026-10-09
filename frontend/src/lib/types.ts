@@ -91,3 +91,37 @@ export interface AssetSummary {
   asset_type: string;
   sector: string;
 }
+
+/** One-year numbers; null when an asset has too little price history. */
+export interface AssetRisk {
+  volatility_1y: number | null;
+  beta: number | null;
+  max_drawdown_1y: number | null;
+  dividend_yield: number | null;
+}
+
+export interface DashboardAsset {
+  ticker: string;
+  name: string;
+  asset_type: string;
+  category: string | null;
+  sector: string;
+  risk: AssetRisk | null;
+}
+
+export interface DashboardSuggestion extends DashboardAsset {
+  /** 0-1 similarity to the profile, for ordering only; not a forecast. */
+  score: number;
+  /** Plain-English reasons: content reasons first, the last one is always about risk. */
+  reasons: string[];
+}
+
+export interface Dashboard {
+  risk_level: { key: string; label: string; volatility_limit: number; step: number | null; steps: number };
+  interests: { key: string; label: string }[];
+  asset_types: string;
+  /** Last trading day in the price data behind the risk numbers (YYYY-MM-DD). */
+  prices_as_of: string | null;
+  watchlist: DashboardAsset[];
+  suggestions: DashboardSuggestion[];
+}
