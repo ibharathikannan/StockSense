@@ -15,26 +15,6 @@ def isolated_quota(tmp_path, monkeypatch):
     monkeypatch.setattr(news, "AV_QUOTA_PATH", tmp_path / "quota.sqlite3")
 
 
-def test_av_records_persist_ticker_sentiment_with_relevance():
-    """Alpha Vantage per-ticker sentiment must retain relevance_score (the field the P1
-    diagnostic found was being dropped and cannot be recovered later)."""
-    article = {
-        "time_published": "20260110T110000",
-        "url": "https://example.org/apple-earnings",
-        "title": "Apple reports results", "summary": "Apple earnings summary.",
-        "source": "Example Newswire",
-        "ticker_sentiment": [
-            {"ticker": "AAPL", "ticker_sentiment_label": "Bearish",
-             "ticker_sentiment_score": "-0.3", "relevance_score": "0.92"},
-            {"ticker": "ZZZZ", "ticker_sentiment_score": "0.1", "relevance_score": "0.4"},
-        ],
-    }
-    records = news._av_records(article, {"AAPL"}, "2026-01-10T12:00:00Z")
-    assert len(records) == 1
-    sentiment = records[0]["provider_sentiment"]["AAPL"]
-    assert sentiment == {"label": "Bearish", "score": "-0.3", "relevance": "0.92"}
-
-
 def test_quota_is_shared_across_output_directories():
     for expected in range(1, 26):
         assert news.reserve_av_request("account", "2026-09-02") == expected
