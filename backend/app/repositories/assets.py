@@ -97,3 +97,14 @@ class AssetsRepository:
             limit,
         )
         return [dict(r) for r in rows]
+
+    async def get_by_ticker(self, ticker: str) -> dict[str, Any] | None:
+        """Fetch a single asset document by ticker symbol (case-insensitive)."""
+        row = await self._pool.fetchrow(
+            """
+            SELECT * FROM assets
+            WHERE UPPER(ticker) = UPPER($1)
+            """,
+            ticker.strip(),
+        )
+        return dict(row) if row else None

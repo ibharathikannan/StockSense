@@ -66,3 +66,16 @@ class AssetSummary(BaseModel):
     name: str
     asset_type: str
     sector: str
+
+class AssetEvaluationRequest(BaseModel):
+    forecast_return: float = Field(..., description="Projected 10-day return % (e.g. 2.5 for +2.5%)")
+    volatility: float | None = Field(None, description="Annualized volatility. If None, pulled from asset profile.")
+    sentiment_score: float | None = Field(None, ge=-1.0, le=1.0, description="News sentiment between -1.0 and 1.0")
+    prediction_interval_width: float | None = Field(None, ge=0.0, description="Width of prediction uncertainty interval %")
+    user_risk_profile: str | None = Field("moderate", description="User risk tier (e.g. conservative, moderate, growth)")
+
+
+class AssetStanceResponse(BaseModel):
+    ticker: str
+    stance: str
+    decision_trace: list[str]
