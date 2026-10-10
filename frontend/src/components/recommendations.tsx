@@ -1,5 +1,14 @@
+import {
+  AlertTriangle,
+  Clock,
+  Info,
+  Newspaper,
+  PieChart,
+  TrendingUp,
+  type LucideIcon,
+} from "lucide-react";
 import { Badge } from "@/components/ui";
-import type { Forecast, Stance } from "@/lib/types";
+import type { Forecast, RecommendationSnapshot, Stance } from "@/lib/types";
 
 const STANCE: Record<Stance, { tone: "green" | "amber" | "red"; label: string; blurb: string }> = {
   EXPLORE: { tone: "green", label: "Explore", blurb: "Worth a closer look" },
@@ -34,4 +43,51 @@ export function forecastLabel(forecast: Forecast): string {
 
 export function sourceLabel(sourceType: string): string {
   return sourceType === "sec" ? "SEC filing" : sourceType === "news" ? "News" : sourceType;
+}
+
+/** The outlet name from a URL (e.g. "benzinga.com"), for a news byline. */
+export function hostname(url: string | null): string {
+  if (!url) return "";
+  try {
+    return new URL(url).hostname.replace(/^www\./, "");
+  } catch {
+    return "";
+  }
+}
+
+/** Icon + colour for a decision-trace line, so the "why" reads at a glance. */
+export function reasonStyle(line: string): { Icon: LucideIcon; iconClass: string; chipClass: string } {
+  const l = line.toLowerCase();
+  if (/favorable|supportive|bullish|aligned|confidence|narrow|strong/.test(l))
+    return { Icon: TrendingUp, iconClass: "text-emerald-600", chipClass: "bg-emerald-50" };
+  if (/mismatch|downside|adverse|bearish|exceeds|loss/.test(l))
+    return { Icon: AlertTriangle, iconClass: "text-red-600", chipClass: "bg-red-50" };
+  if (/news|sentiment|coverage/.test(l))
+    return { Icon: Newspaper, iconClass: "text-brand-600", chipClass: "bg-brand-50" };
+  if (/concentration|diversif/.test(l))
+    return { Icon: PieChart, iconClass: "text-amber-600", chipClass: "bg-amber-50" };
+  if (/pending|uncertainty|capped|moderate|below|mild|neutral/.test(l))
+    return { Icon: Clock, iconClass: "text-slate-500", chipClass: "bg-slate-100" };
+  return { Icon: Info, iconClass: "text-brand-600", chipClass: "bg-brand-50" };
+}
+
+/** One plain-English takeaway sentence, composed from the structured signal (no jargon). */
+export function takeaway(snap: RecommendationSnapshot): string {
+  const stance = snap.signal.news_aware_stance;
+  const base =
+    stance === "CAUTION"
+      ? "Flagged Caution — treat this as higher-risk and research it carefully before acting."
+      : stance === "EXPLORE"
+        ? "Worth exploring — the current signals are constructive."
+        : "One to monitor — keep it on your radar; the signals are mixed right now.";
+  const score = snap.signal.news_signal.score;
+  const news =
+    score === null
+      ? ""
+      : score <= -0.15
+        ? " Recent news coverage has been negative."
+        : score >= 0.15
+          ? " Recent news coverage has been positive."
+          : " Recent news coverage is mixed.";
+  return base + news;
 }

@@ -133,22 +133,30 @@ def fuse(vector_hits: list[Hit], keyword_hits: list[Hit], k: int) -> list[Hit]:
     return ordered[:k]
 
 
-def _title(hit: Hit) -> str:
-    """A human-readable citation title, falling back to form/source when none is stored."""
-    if hit.title:
-        return hit.title
+def _title_fallback(hit: Hit) -> str:
     year = hit.published_at.year if hit.published_at else None
-    if hit.source_type == "sec" and hit.form:
-        return f"{hit.form} filing" + (f" ({year})" if year else "")
-    return (hit.source_type or "source").upper()
+    if hit.source_type == "sec":
+        form = f"{hit.form} " if hit.form else ""
+        return f"{form}SEC filing" + (f" ({year})" if year else "")
+    return "News article"
 
 
 def _to_evidence(hit: Hit) -> dict:
-    snippet = (hit.text or "").strip()
-    if len(snippet) > SNIPPET_CHARS:
-        snippet = snippet[:SNIPPET_CHARS].rsplit(" ", 1)[0] + "…"
+    """Shape a hit into cited Evidence with a readable headline and a clean summary."""
+    text = (hit.text or "").strip()
+    title = hit.title
+    # News chunks (e.g. Alpaca) often carry the headline as the first line of the text with no
+    # separate title. Promote it to the title, and drop it from the snippet to avoid repetition.
+    if not title and hit.source_type == "news":
+        head, _, rest = text.partition("\n")
+        head = head.strip()
+        if 10 <= len(head) <= 160:
+            title = head
+            text = rest.strip() or head
+    title = title or _title_fallback(hit)
+    snippet = text if len(text) <= SNIPPET_CHARS else text[:SNIPPET_CHARS].rsplit(" ", 1)[0] + "…"
     return {
-        "title": _title(hit),
+        "title": title,
         "source_type": hit.source_type or "",
         "published_at": hit.published_at.isoformat() if hit.published_at else None,
         "source_url": hit.source_url or "",

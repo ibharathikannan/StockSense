@@ -91,9 +91,14 @@ def assemble(conn, profiles: list[dict], marketaux_records, as_of: datetime, *,
             continue
         news_signal = news.get(profile["ticker"])
         coverage["with_news"] += int(news_signal is not None)
-        # Evidence is independent of risk tier, so retrieve once per ticker.
-        evidence = retrieve(conn, f"{profile['name']} recent news, business outlook and risks",
-                            tickers=[profile["ticker"]], as_of=as_of, k=k)
+        # Evidence is independent of risk tier, so retrieve once per ticker. News leads (it is
+        # readable and current); filings are supporting context, so fewer and after the news.
+        news_ev = retrieve(conn, f"{profile['name']} latest news and developments",
+                           tickers=[profile["ticker"]], as_of=as_of, source_types=["news"],
+                           k=3, min_similarity=0.25)
+        sec_ev = retrieve(conn, f"{profile['name']} business risks and financial results",
+                          tickers=[profile["ticker"]], as_of=as_of, source_types=["sec"], k=2)
+        evidence = news_ev + sec_ev
         coverage["with_evidence"] += int(bool(evidence))
         forecast = placeholder_forecast(profile["ticker"])
         for tier in tiers:
