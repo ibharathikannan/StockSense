@@ -3,13 +3,15 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { ArrowLeft, ExternalLink, FileText } from "lucide-react";
-import { Alert, Card, PageHeader, PageLoader } from "@/components/ui";
+import { Alert, Badge, Card, PageHeader, PageLoader } from "@/components/ui";
 import {
   StanceBadge,
   forecastLabel,
   hostname,
   reasonStyle,
+  sentimentFlag,
   takeaway,
+  toBullets,
 } from "@/components/recommendations";
 import { errorMessage } from "@/lib/api";
 import { useFetch } from "@/lib/hooks";
@@ -51,28 +53,49 @@ function ReasonList({ lines }: { lines: string[] }) {
 function NewsItem({ e }: { e: Evidence }) {
   const outlet = hostname(e.source_url);
   const date = e.published_at ? e.published_at.slice(0, 10) : "";
-  const headline = (
-    <p className="font-medium leading-snug">{e.title || "News update"}</p>
-  );
+  const flag = sentimentFlag(e.sentiment);
+  const bullets = toBullets(e.snippet);
   return (
     <div className="rounded-xl border border-line p-4 transition-shadow hover:shadow-sm">
-      {e.source_url ? (
-        <a href={e.source_url} target="_blank" rel="noreferrer" className="group">
-          <span className="group-hover:text-brand-600">{headline}</span>
-        </a>
+      <div className="flex items-start justify-between gap-2">
+        {e.source_url ? (
+          <a
+            href={e.source_url}
+            target="_blank"
+            rel="noreferrer"
+            className="font-medium leading-snug hover:text-brand-600"
+          >
+            {e.title || "News update"}
+          </a>
+        ) : (
+          <p className="font-medium leading-snug">{e.title || "News update"}</p>
+        )}
+        {flag && (
+          <Badge tone={flag.tone}>
+            <flag.Icon className="mr-1 size-3" aria-hidden />
+            {flag.label}
+          </Badge>
+        )}
+      </div>
+      <p className="mt-1 text-xs text-muted">{[outlet, date].filter(Boolean).join(" · ")}</p>
+      {bullets.length > 0 ? (
+        <ul className="mt-2.5 space-y-1.5 text-sm text-muted">
+          {bullets.map((b, i) => (
+            <li key={i} className="flex gap-2">
+              <span className="mt-[7px] size-1.5 shrink-0 rounded-full bg-slate-400" aria-hidden />
+              <span>{b}</span>
+            </li>
+          ))}
+        </ul>
       ) : (
-        headline
+        <p className="mt-2 text-sm text-muted">{e.snippet}</p>
       )}
-      <p className="mt-1 text-xs text-muted">
-        {[outlet, date].filter(Boolean).join(" · ")}
-      </p>
-      <p className="mt-2 text-sm text-muted">{e.snippet}</p>
       {e.source_url && (
         <a
           href={e.source_url}
           target="_blank"
           rel="noreferrer"
-          className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-brand-600 hover:underline"
+          className="mt-2.5 inline-flex items-center gap-1 text-xs font-medium text-brand-600 hover:underline"
         >
           Read the article <ExternalLink className="size-3" />
         </a>

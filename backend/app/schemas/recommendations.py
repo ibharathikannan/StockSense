@@ -73,6 +73,8 @@ class Evidence(BaseModel):
     published_at: datetime | None = None
     source_url: str | None = None
     snippet: str
+    # Provider (Marketaux) per-article sentiment, -1..1, for news items; None for filings.
+    sentiment: float | None = None
 
 
 class Explanation(BaseModel):

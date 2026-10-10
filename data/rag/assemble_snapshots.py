@@ -46,6 +46,42 @@ def placeholder_forecast(ticker: str) -> dict:
             "basis": "placeholder — pending XGBoost serving"}
 
 
+def _parse_dt(value):
+    dt = datetime.fromisoformat(value.replace("Z", "+00:00")) if isinstance(value, str) else value
+    return dt.replace(tzinfo=timezone.utc) if dt.tzinfo is None else dt.astimezone(timezone.utc)
+
+
+def marketaux_news_evidence(docs: list[dict], ticker: str, as_of: datetime, limit: int = 3) -> list[dict]:
+    """Recent Marketaux articles for a ticker as Evidence, carrying each article's own
+    sentiment (so the UI can flag good/bad) and a real headline. Most recent first; no
+    look-ahead; deduped by URL."""
+    items, seen = [], set()
+    for doc in docs:
+        if ticker not in (doc.get("tickers") or []):
+            continue
+        published = _parse_dt(doc["published_at"])
+        available = _parse_dt(doc.get("available_at") or doc["published_at"])
+        if published > as_of or available > as_of:
+            continue
+        key = doc.get("source_url") or doc.get("content_hash") or doc.get("document_id")
+        if key in seen:
+            continue
+        seen.add(key)
+        payload = (doc.get("provider_sentiment") or {}).get(ticker) or {}
+        try:
+            sentiment = float(payload.get("score"))
+        except (TypeError, ValueError):
+            sentiment = None
+        snippet = (doc.get("text") or "").strip()
+        items.append((published, {
+            "title": doc.get("title") or "", "source_type": "news",
+            "published_at": doc["published_at"], "source_url": doc.get("source_url") or "",
+            "snippet": snippet[:500], "sentiment": sentiment,
+        }))
+    items.sort(key=lambda pair: pair[0], reverse=True)
+    return [evidence for _, evidence in items[:limit]]
+
+
 def build_snapshot(profile: dict, risk_profile: str, news_signal: dict | None,
                    evidence: list[dict], forecast: dict, as_of: datetime) -> dict:
     """Assemble one RecommendationSnapshot (pure given its inputs)."""
@@ -76,11 +112,15 @@ def build_snapshot(profile: dict, risk_profile: str, news_signal: dict | None,
     }
 
 
-def assemble(conn, profiles: list[dict], marketaux_records, as_of: datetime, *,
+def assemble(conn, profiles: list[dict], marketaux_docs: list[dict], as_of: datetime, *,
              tiers=RISK_TIERS, k: int = 3) -> tuple[list[dict], dict]:
     eligible = [p for p in profiles if p.get("recommendation_eligible")]
     tickers = [p["ticker"] for p in eligible]
-    news = build_news_signals(marketaux_records, tickers, as_of, NEWS_CONFIG)
+    news = build_news_signals(records_from_documents(marketaux_docs), tickers, as_of, NEWS_CONFIG)
+    docs_by_ticker: dict[str, list[dict]] = {}
+    for doc in marketaux_docs:
+        for t in (doc.get("tickers") or []):
+            docs_by_ticker.setdefault(t, []).append(doc)
 
     snapshots: list[dict] = []
     coverage = {"eligible": len(eligible), "skipped_no_volatility": 0, "with_news": 0,
@@ -93,9 +133,14 @@ def assemble(conn, profiles: list[dict], marketaux_records, as_of: datetime, *,
         coverage["with_news"] += int(news_signal is not None)
         # Evidence is independent of risk tier, so retrieve once per ticker. News leads (it is
         # readable and current); filings are supporting context, so fewer and after the news.
-        news_ev = retrieve(conn, f"{profile['name']} latest news and developments",
-                           tickers=[profile["ticker"]], as_of=as_of, source_types=["news"],
-                           k=3, min_similarity=0.25)
+        # News comes straight from Marketaux (clean headlines + per-article sentiment); fall
+        # back to semantic news retrieval only when Marketaux has nothing for this ticker.
+        news_ev = marketaux_news_evidence(docs_by_ticker.get(profile["ticker"], []),
+                                          profile["ticker"], as_of, limit=3)
+        if not news_ev:
+            news_ev = retrieve(conn, f"{profile['name']} latest news and developments",
+                               tickers=[profile["ticker"]], as_of=as_of, source_types=["news"],
+                               k=3, min_similarity=0.25)
         sec_ev = retrieve(conn, f"{profile['name']} business risks and financial results",
                           tickers=[profile["ticker"]], as_of=as_of, source_types=["sec"], k=2)
         evidence = news_ev + sec_ev
@@ -117,13 +162,13 @@ def main(argv=None) -> int:
     args = parser.parse_args(argv)
 
     profiles = json.loads(Path(args.profiles).read_text())
-    marketaux_records = records_from_documents(read_jsonl(args.marketaux))
+    marketaux_docs = read_jsonl(args.marketaux)
     as_of = datetime.now(timezone.utc)
 
     import psycopg
     try:
         with _connect(args.env_file) as conn:
-            snapshots, coverage = assemble(conn, profiles, marketaux_records, as_of, k=args.k)
+            snapshots, coverage = assemble(conn, profiles, marketaux_docs, as_of, k=args.k)
     except psycopg.Error:
         print("Database operation failed. Check connection settings and credentials.")
         return 1

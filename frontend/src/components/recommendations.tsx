@@ -2,8 +2,11 @@ import {
   AlertTriangle,
   Clock,
   Info,
+  Minus,
   Newspaper,
   PieChart,
+  ThumbsDown,
+  ThumbsUp,
   TrendingUp,
   type LucideIcon,
 } from "lucide-react";
@@ -69,6 +72,25 @@ export function reasonStyle(line: string): { Icon: LucideIcon; iconClass: string
   if (/pending|uncertainty|capped|moderate|below|mild|neutral/.test(l))
     return { Icon: Clock, iconClass: "text-slate-500", chipClass: "bg-slate-100" };
   return { Icon: Info, iconClass: "text-brand-600", chipClass: "bg-brand-50" };
+}
+
+/** Good/bad flag for a news article from its sentiment score (null → no flag). */
+export function sentimentFlag(
+  score: number | null,
+): { label: string; tone: "green" | "red" | "neutral"; Icon: LucideIcon } | null {
+  if (score === null || score === undefined) return null;
+  if (score <= -0.15) return { label: "Negative", tone: "red", Icon: ThumbsDown };
+  if (score >= 0.15) return { label: "Positive", tone: "green", Icon: ThumbsUp };
+  return { label: "Neutral", tone: "neutral", Icon: Minus };
+}
+
+/** Split a short summary into its lead sentences, for scannable bullets. */
+export function toBullets(text: string, max = 3): string[] {
+  return (text || "")
+    .split(/(?<=[.!?])\s+/)
+    .map((s) => s.trim())
+    .filter((s) => s.length > 12)
+    .slice(0, max);
 }
 
 /** One plain-English takeaway sentence, composed from the structured signal (no jargon). */

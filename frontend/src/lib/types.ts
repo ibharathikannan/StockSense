@@ -134,6 +134,8 @@ export interface Evidence {
   published_at: string | null;
   source_url: string | null;
   snippet: string;
+  /** Provider (Marketaux) per-article sentiment, -1..1, for news; null for filings. */
+  sentiment: number | null;
 }
 
 export interface Explanation {
