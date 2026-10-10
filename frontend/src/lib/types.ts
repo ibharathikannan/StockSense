@@ -91,3 +91,81 @@ export interface AssetSummary {
   asset_type: string;
   sector: string;
 }
+
+// --- Recommendations (backend/app/schemas/recommendations.py) ---------------
+
+export type Stance = "EXPLORE" | "MONITOR" | "CAUTION";
+
+export interface Forecast {
+  return_10d: number | null;
+  lower: number | null;
+  upper: number | null;
+  model_version: string | null;
+  basis: string;
+}
+
+export interface NewsSignal {
+  score: number | null;
+  relevance: number | null;
+  recency_hours: number | null;
+  source: string | null;
+  article_count: number;
+}
+
+export interface Signal {
+  baseline_stance: Stance;
+  news_aware_stance: Stance;
+  provisional: boolean;
+  decision_trace: string[];
+  news_signal: NewsSignal;
+  risk_profile: string;
+}
+
+export interface Citation {
+  title: string;
+  source_type: string;
+  published_at: string | null;
+  source_url: string | null;
+}
+
+export interface Evidence {
+  title: string;
+  source_type: string;
+  published_at: string | null;
+  source_url: string | null;
+  snippet: string;
+  /** Provider (Marketaux) per-article sentiment, -1..1, for news; null for filings. */
+  sentiment: number | null;
+}
+
+export interface Explanation {
+  text: string;
+  citations: Citation[];
+  abstained: boolean;
+  caveats: string[];
+}
+
+export interface RecommendationSnapshot {
+  ticker: string;
+  name: string;
+  sector: string;
+  asset_type: string;
+  as_of: string | null;
+  forecast: Forecast;
+  signal: Signal;
+  evidence: Evidence[];
+  explanation: Explanation;
+}
+
+export interface DiversificationNote {
+  sector_exposure: Record<string, number>;
+  dominant_sector: string | null;
+  concentrated: boolean;
+  warning: string | null;
+  diversifying_tickers: string[];
+}
+
+export interface DiscoveryResponse {
+  candidates: RecommendationSnapshot[];
+  diversification: DiversificationNote;
+}

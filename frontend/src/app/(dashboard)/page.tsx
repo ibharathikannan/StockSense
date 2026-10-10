@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { Card, Badge, PageHeader } from "@/components/ui";
+import { Compass } from "lucide-react";
+import { Card, Badge, LinkButton, PageHeader } from "@/components/ui";
 import { useAuth } from "@/lib/auth";
 import { useFetch } from "@/lib/hooks";
 import { rolesService } from "@/services/roles";
@@ -27,6 +28,19 @@ export default function DashboardPage() {
   return (
     <>
       <PageHeader title={`Welcome back, ${user?.full_name.split(" ")[0]}`} description="Here's an overview of your workspace." />
+
+      <Card className="mb-6 flex flex-wrap items-center justify-between gap-4 bg-brand-50 p-6">
+        <div className="flex items-start gap-3">
+          <Compass className="mt-0.5 size-6 text-brand-600" aria-hidden />
+          <div>
+            <h2 className="font-semibold">Your research set is ready</h2>
+            <p className="mt-1 text-sm text-muted">
+              Explore personalised, explainable signals — Explore / Monitor / Caution — with the reasons behind each.
+            </p>
+          </div>
+        </div>
+        <LinkButton href="/discover">Go to Discover</LinkButton>
+      </Card>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {can("users:read") && <Stat label="Users" value={users.data?.total} href="/users" />}

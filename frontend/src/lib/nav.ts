@@ -1,4 +1,4 @@
-import { LayoutDashboard, Settings, ShieldCheck, UserCircle, Users } from "lucide-react";
+import { Compass, LayoutDashboard, Settings, ShieldCheck, UserCircle, Users } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 export interface NavItem {
@@ -12,6 +12,7 @@ export interface NavItem {
 // Add a line here when you add a module (and a permission in backend/app/core/permissions.py).
 export const NAV_ITEMS: NavItem[] = [
   { label: "Dashboard", href: "/", icon: LayoutDashboard },
+  { label: "Discover", href: "/discover", icon: Compass },
   { label: "Users", href: "/users", icon: Users, permission: "users:read" },
   { label: "Roles", href: "/roles", icon: ShieldCheck, permission: "roles:read" },
   { label: "Profile", href: "/profile", icon: UserCircle },
