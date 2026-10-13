@@ -18,7 +18,7 @@ def test_explore_stance_high_confluence():
 
 
 def test_missing_sentiment_fallback():
-    """Missing news sentiment (None) defaults to neutral and yields MONITOR."""
+    """Missing news sentiment remains unavailable and yields MONITOR."""
     result = evaluate_stock_stance(
         forecast_return=2.5,
         volatility=0.25,

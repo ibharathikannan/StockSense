@@ -110,11 +110,11 @@ def evaluate_stock_stance(
              f"Risk profile '{user_risk_profile}' not recognised; "
              f"using {DEFAULT_PROFILE.title()} limits.")
 
-    # 2. Missing-sentiment fallback (neutral, so it can never reach EXPLORE)
+    # 2. Missing sentiment remains unavailable and cannot support EXPLORE
     if sentiment_score is None:
-        sentiment = 0.0
+        sentiment = None
         note("SENTIMENT_MISSING",
-             "News coverage gap: sentiment defaulted to neutral (0.00).")
+             "News coverage gap: sentiment is unavailable; no sentiment evidence was used.")
     else:
         sentiment = sentiment_score
 
@@ -129,7 +129,7 @@ def evaluate_stock_stance(
              f"Risk mismatch: volatility ({volatility:.2f}) exceeds your "
              f"{display_profile} limit ({max_vol:.2f}).")
         caution = True
-    if sentiment <= SENTIMENT_BEARISH:
+    if sentiment is not None and sentiment <= SENTIMENT_BEARISH:
         note("BEARISH_SENTIMENT",
              f"Adverse market environment: news sentiment is bearish ({sentiment:+.2f}).")
         caution = True
@@ -187,7 +187,7 @@ def evaluate_stock_stance(
 
     # 5. EXPLORE: every condition must align (volatility already passed above)
     strong_return = forecast_return >= STRONG_RETURN_THRESHOLD
-    bullish = sentiment >= SENTIMENT_BULLISH and sentiment_score is not None
+    bullish = sentiment is not None and sentiment >= SENTIMENT_BULLISH
 
     if strong_return and bullish and not high_uncertainty and not concentrated:
         note("EXPLORE_CONFLUENCE",

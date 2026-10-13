@@ -12,10 +12,14 @@ from app.core.config import Settings, get_settings
 from app.core.permissions import ADMIN_ROLE, effective_permissions
 from app.core.security import decode_access_token
 from app.repositories.assets import AssetsRepository
+from app.repositories.forecasts import ForecastRepository
 from app.repositories.profiles import ProfilesRepository
 from app.repositories.roles import RolesRepository
 from app.repositories.users import UsersRepository
+from app.services.dashboard import DashboardService
 from app.services.profiles import ProfileService
+from app.services.forecasts import ForecastService
+from app.services.recommendations import RecommendationService
 from app.services.users import UserService
 
 bearer_scheme = HTTPBearer(auto_error=False)
@@ -53,6 +57,37 @@ def get_profile_service(
     assets: AssetsRepository = Depends(get_assets_repo),
 ) -> ProfileService:
     return ProfileService(profiles, assets)
+
+
+def get_forecast_service(request: Request, settings: Settings = Depends(get_settings)):
+    if settings.forecast_model_dir is not None:
+        from app.repositories.forecast_feature_snapshot import SnapshotFeatureRepository
+        from app.services.forecast_inference import ForecastInferenceService
+        return ForecastInferenceService(
+            SnapshotFeatureRepository(settings.forecast_model_dir), settings.forecast_model_dir)
+    return ForecastService(ForecastRepository(settings.forecast_results_dir))
+
+
+def get_forecast_assessment_service(
+    profiles: ProfilesRepository = Depends(get_profiles_repo),
+    assets: AssetsRepository = Depends(get_assets_repo),
+):
+    from app.services.forecast_assessment import ForecastAssessmentService
+    return ForecastAssessmentService(profiles, assets)
+
+
+def get_recommendation_service(
+    profiles: ProfilesRepository = Depends(get_profiles_repo),
+    assets: AssetsRepository = Depends(get_assets_repo),
+) -> RecommendationService:
+    return RecommendationService(profiles, assets)
+
+
+def get_dashboard_service(
+    profiles: ProfilesRepository = Depends(get_profiles_repo),
+    assets: AssetsRepository = Depends(get_assets_repo),
+) -> DashboardService:
+    return DashboardService(profiles, assets)
 
 
 @dataclass
