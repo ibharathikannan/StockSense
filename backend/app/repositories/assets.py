@@ -82,6 +82,17 @@ class AssetsRepository:
         )
         return {r["ticker"] for r in rows}
 
+    async def list_recommendable(self) -> list[dict[str, Any]]:
+        """Every recommendable asset with the content the recommender compares."""
+        rows = await self._pool.fetch(
+            """
+            SELECT ticker, name, asset_type, category, sector, themes, risk, as_of FROM assets
+            WHERE recommendation_eligible
+            ORDER BY ticker
+            """
+        )
+        return [dict(r) for r in rows]
+
     async def search(self, query: str, limit: int = 8) -> list[dict[str, Any]]:
         """Type-ahead: ticker prefix or name substring, case-insensitive."""
         contains = like_pattern(query.strip())

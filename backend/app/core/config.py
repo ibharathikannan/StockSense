@@ -8,6 +8,7 @@ from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 SAMPLE_SECRET_PREFIX = "dev-only-secret"
+MAX_RECOMMENDATIONS = 20
 
 
 class Settings(BaseSettings):
@@ -39,14 +40,18 @@ class Settings(BaseSettings):
     # Public self-signup at POST /api/auth/register. Set false so only admins can create users.
     allow_registration: bool = True
 
-    # Offline, validated CSV/JSON forecast export. No training or pickle loading
-    # occurs in the API process. Leave unset to report forecasts unavailable.
+    # Legacy saved-result mode; optional trusted model inference takes precedence.
+    # No fitting or provider refresh occurs in either mode.
     forecast_results_dir: Path | None = None
+    forecast_model_dir: Path | None = None
 
-    @field_validator("forecast_results_dir", mode="before")
+    @field_validator("forecast_results_dir", "forecast_model_dir", mode="before")
     @classmethod
     def _empty_forecast_directory(cls, value):
         return None if isinstance(value, str) and not value.strip() else value
+
+    # Suggestions returned by GET /api/recommendations when the request has no ?limit=.
+    recommendations_limit: int = Field(10, ge=1, le=MAX_RECOMMENDATIONS)
 
     api_host: str = "0.0.0.0"
     api_port: int = 8000

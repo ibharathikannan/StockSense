@@ -1,5 +1,48 @@
 # AI work plan
 
+## Authorized rule-engine handoff
+
+The user requested automatic forecasting-to-rule-engine integration. The
+recommended forecast API now supplies percent-unit forecast return, unchanged
+interval width, catalogue one-year volatility and the caller's saved risk tier
+to the existing deterministic rules, returning stance and decision trace for
+dashboard display. Missing sentiment remains unavailable; missing risk inputs
+suppress a stance; stale inputs produce historical assessments. No sentiment
+provider, altered numeric thresholds, recommendation-ranking change, runtime
+training, database write, commit, push or deployment is included.
+
+## Local artifact deployment — superseding numeric SQL inference
+
+The user subsequently requested local Yahoo training/retraining and manual upload
+of a versioned saved model plus latest predictor snapshot. Application forecasting
+now reads only that local package; it does not depend on numeric SQL tables.
+Normal authentication/profile/recommendation storage remains unchanged. Add a
+manual offline command with explicit Yahoo opt-in or an existing Parquet source,
+completed-session cutoff, purged validation/calibration and a new ignored output
+folder. Preserve all committed source data and previous model versions. No
+scheduler, provider downloads inside requests, cloud upload, commit or push.
+
+## Saved-model recommender integration — 2026-10-14
+
+The user authorized importing Bharathi's unmerged recommender/dashboard code and
+building authenticated saved-XGBoost inference for only those recommendations.
+Numeric tables remain manually maintained by the teammate. There is no automatic
+price download, scheduled refresh, runtime training or model promotion. The lead
+owns integration, saved-model loading, read-only SQL, runtime dependencies,
+configuration, packaging and docs; frontend ownership covers the dashboard
+forecast panel; notebook ownership covers the separate Git-tracked research
+walkthrough; validation owns recommendation-scoped API checks. Original data,
+weights and secrets remain ignored/preserved. Stop after local tests and review;
+no commit, push, merge to main or deployment is authorized by this implementation.
+
+The application may load only an administrator-provisioned trusted artifact,
+check its hash/feature/runtime contract, and apply saved preprocessing and
+calibration. Updated input dates and model dates remain visible. Source tables
+must provide completed after-close features and matching raw prices. The new
+research notebook separates reported Colab history from reproducible repository
+runs; its experiments are not deployed. Earlier CSV serving remains a legacy
+mode, with configured model inference taking precedence and failing closed.
+
 ## Subsequent authorization — 2026-10-08
 
 The user authorized repository implementation of the selected forecasting

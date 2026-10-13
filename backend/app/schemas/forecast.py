@@ -6,6 +6,16 @@ from typing import Literal
 from pydantic import BaseModel, ConfigDict, Field, FiniteFloat, model_validator
 
 
+class RuleInputs(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    forecast_return: FiniteFloat
+    prediction_interval_width: FiniteFloat = Field(ge=0)
+    volatility: FiniteFloat | None = Field(default=None, ge=0)
+    volatility_as_of: date | None = None
+    sentiment_score: FiniteFloat | None = Field(default=None, ge=-1, le=1)
+    user_risk_profile: str | None = None
+
+
 class ForecastItem(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -19,6 +29,10 @@ class ForecastItem(BaseModel):
     stale_snapshot: bool
     data_age_calendar_days: int = Field(ge=0)
     calibration_latest_outcome: date
+    stance: Literal["EXPLORE", "MONITOR", "CAUTION"] | None = None
+    decision_trace: list[str] = Field(default_factory=list)
+    assessment_status: Literal["not_evaluated", "evaluated", "historical", "unavailable"] = "not_evaluated"
+    rule_inputs: RuleInputs | None = None
 
     @model_validator(mode="after")
     def valid_interval(self):
@@ -47,5 +61,7 @@ class ForecastSnapshot(BaseModel):
     forecasts: list[ForecastItem] = Field(max_length=90)
     selected_tickers: list[str] = Field(min_length=1, max_length=90)
     unavailable_tickers: list[str] = Field(max_length=90)
-    status: Literal["experimental_offline_snapshot"] = "experimental_offline_snapshot"
+    status: Literal["experimental_offline_snapshot", "experimental_saved_model_inference"] = "experimental_offline_snapshot"
+    source_mode: Literal["saved_results", "saved_model_inference"] = "saved_results"
+    model_as_of: date | None = None
     uncertainty_description: Literal["Interval width in percentage points; not a probability of accuracy"] = "Interval width in percentage points; not a probability of accuracy"

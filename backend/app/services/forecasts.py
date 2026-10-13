@@ -13,7 +13,7 @@ class ForecastUnavailable(ServiceError):
     status_code = 503
 
     def __init__(self):
-        super().__init__("Forecast results are unavailable. Ask an administrator to configure a valid offline snapshot.")
+        super().__init__("Forecast results are unavailable. Ask an administrator to configure a valid forecast model/data source or saved snapshot.")
 
 
 class ForecastService:

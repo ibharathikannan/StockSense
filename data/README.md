@@ -7,8 +7,9 @@ relative features, XGBoost with Ridge and mean/median benchmarks, purged chronol
 selection, empirical uncertainty calibration and saved-model prediction.
 See [FORECASTING.md](FORECASTING.md) for commands and limits. It reads existing
 local or pinned read-only PostgreSQL inputs; it does not regenerate datasets or
-refresh providers. A separate authenticated web adapter displays saved results
-only for explicitly selected tickers. Generated models and snapshot forecasts
+refresh providers. The authenticated dashboard supports saved-XGBoost inference for server-selected
+recommendations using uploaded local model-and-feature packages; a legacy adapter also
+displays saved CSV results. Training and downloads never run in web requests. Generated models and snapshot forecasts
 stay local under ignored storage.
 
 Each step has its own script so that price collection, macro collection, and

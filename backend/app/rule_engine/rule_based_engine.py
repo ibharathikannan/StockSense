@@ -51,13 +51,11 @@ def evaluate_stock_stance(
     display_profile = profile_key.title()
 
     # 2. Handle missing data fallback (Resilience Rule)
+    effective_sentiment = sentiment_score
     if sentiment_score is None:
-        effective_sentiment = 0.0
         decision_trace.append(
-            "News coverage gap: No recent headlines detected; sentiment defaulted to neutral (0.00)."
+            "News coverage gap: Sentiment is unavailable; no sentiment evidence was used."
         )
-    else:
-        effective_sentiment = sentiment_score
 
     # 3. Safety First: Caution Checks
     caution_triggered = False
@@ -74,7 +72,7 @@ def evaluate_stock_stance(
         )
         caution_triggered = True
 
-    if effective_sentiment <= -0.15:
+    if effective_sentiment is not None and effective_sentiment <= -0.15:
         decision_trace.append(
             f"Adverse market environment: News sentiment is bearish ({effective_sentiment:+.2f})."
         )
@@ -96,7 +94,7 @@ def evaluate_stock_stance(
 
     # 5. Explore Checks (High Confluence)
     is_forecast_strong = forecast_return >= 2.0
-    is_sentiment_bullish = effective_sentiment >= 0.15
+    is_sentiment_bullish = effective_sentiment is not None and effective_sentiment >= 0.15
     is_volatility_safe = volatility <= max_allowed_volatility
 
     if is_forecast_strong and is_sentiment_bullish and is_volatility_safe and not high_uncertainty:
@@ -122,7 +120,7 @@ def evaluate_stock_stance(
     else:
         decision_trace.append(f"Return outlook is positive ({forecast_return:+.1f}%).")
 
-    if -0.15 < effective_sentiment < 0.15 and sentiment_score is not None:
+    if effective_sentiment is not None and -0.15 < effective_sentiment < 0.15:
         decision_trace.append(f"Balanced news backdrop: Market sentiment is neutral ({effective_sentiment:+.2f}).")
 
     decision_trace.append(f"Risk acceptable: Volatility ({volatility:.2f}) is within {display_profile} limits.")

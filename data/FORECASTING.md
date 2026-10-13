@@ -327,3 +327,140 @@ in `app.main`, Docker startup or the Next.js app. It must not be used as a
 production endpoint or as evidence that database-backed login has been tested.
 Stop it with Ctrl+C. Browser checks verified AAPL/NVDA display, unavailable GEV
 coverage and invalid-ticker errors. The authenticated application is unchanged.
+
+## Saved-model dashboard inference: local deployment package
+
+The recommender and personal dashboard integration is retained. Forecasting now
+uses local model and feature files, rather than numeric SQL tables. The ordinary
+application database is still needed for authentication, profiles and recommendations.
+`GET /api/forecasts/recommended` derives the caller's shortlist on the backend;
+only those tickers are passed to the loaded XGBoost estimator. The dashboard
+renders returned estimates and uncertainty with data/model dates and stale warnings.
+
+Configure only the forecasting model directory in the private backend environment:
+
+```dotenv
+FORECAST_MODEL_DIR=/absolute/trusted/path/local-deployment-2026-09-18
+```
+
+Upload the complete versioned directory containing:
+
+- `model.joblib`: saved estimator, preprocessing and calibration.
+- `inference_features.csv`: latest Date/ticker plus the 27 approved predictors.
+- `manifest.json`: hashes binding model, features and report to this version.
+- `report.json`: training provenance, calibration and retrospective diagnostics.
+
+The example package has been generated locally from the existing trained model
+and September 18 data. It is a functioning historical package, not refreshed
+October data. Numeric SQL configuration and credentials are unnecessary for
+forecasting. Unknown/model-unsupported tickers are reported unavailable.
+A configured invalid package fails closed instead of falling back to old CSV.
+Weights and generated snapshots remain ignored; research code belongs in Git.
+
+Production reads the packaged inputs on demand and loads/caches only the trusted
+saved model. It does not fit, download Yahoo data or create database connections
+for numerical forecasting. Exact model bytes are hash-checked before joblib loading;
+joblib still requires a trusted artifact author because a checksum does not make
+malicious pickle safe. The feature contract, finite values, identifiers and
+snapshot dates are checked. Package replacement requires a new version directory,
+configuration change and application restart; do not mutate an active directory.
+
+### Manual local retraining
+
+For existing local prices:
+
+```bash
+python -m data.forecasting.local_retrain \
+  --prices data/raw/historical_prices.parquet \
+  --as-of 2026-09-18 \
+  --tuning-start 2025-07-01 \
+  --calibration-start 2025-10-01 \
+  --evaluation-start 2026-01-01 \
+  --output-dir data/artifacts/forecasting/local-retrain-2026-09-18
+```
+
+For an explicitly requested Yahoo refresh, replace `--prices ...` with
+`--download-yahoo`. This fetches the forecast-eligible universe plus SPY/VIX
+locally; no macro/news/SEC data is fetched. The cutoff must precede the current
+New York calendar date to avoid unfinished sessions. Yahoo end dates are
+exclusive, so the command requests through cutoff plus one day. Any ticker
+collection failure aborts the run. It never overwrites committed raw or prepared
+files. Choose explicit chronological boundaries and a new ignored output folder.
+The production image does not need yfinance; install `data/requirements.txt`
+and `data/requirements-forecasting.txt` in the local training environment only.
+
+Features reuse the existing technical calculation code and corrected 27 relative
+predictors. Train-only preprocessing, purged inner parameter selection, selected
+model refitting and independent interval calibration remain separate. All later
+scores are labeled retrospective diagnostics. The command exports a complete
+model-and-feature package only after validation/inference succeed. It does not
+upload, automatically promote, schedule retraining or deploy anything.
+
+### Runtime packaging and limits
+
+Runtime versions match the existing selected bundle: numpy 2.3.5, pandas 2.2.3,
+scikit-learn 1.9.1, joblib 1.6.0 and XGBoost 3.4.1. Docker includes the forecasting
+Python package and Linux OpenMP runtime. Local weights/features are deliberately
+not baked into the image; provision the trusted package through deployment
+storage, configure its path and restart the application. Linux container building
+and live application-database testing remain unverified without Docker and a
+configured development database. No cloud resources were changed.
+
+For local backend startup make the repository root importable:
+
+```bash
+cd backend
+PYTHONPATH=.. uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+```
+
+On macOS XGBoost may require a separately installed OpenMP library; the temporary
+local tests used scikit-learn's existing `.dylibs` library path. This is not needed
+by the Linux runtime, which installs libgomp1.
+
+Forecasts between uploads reflect the uploaded feature snapshot's date, not the
+request date. Regenerating a response does not refresh market data. Return values
+are decimals; uncertainty width is percentage points, not confidence/accuracy.
+Nominal coverage is empirical and not a guarantee for an individual asset.
+
+### Separate research notebook
+
+`notebooks/forecasting_research.ipynb` documents the original/relative/expanded
+features, model comparisons, purged validation, PCA, ensembles, SEC/longer-history
+work and uncertainty diagnostics. It separates reported Colab results from
+reproducible repository runs and discloses missing original inputs. Training and
+saving default to disabled, with opt-in artifacts under ignored storage. These
+experiments are not production startup tasks. Only the selected XGBoost model
+and its required preprocessing/calibration are served.
+
+## Rule-engine handoff on the dashboard
+
+The recommended-forecast endpoint now enriches each available prediction through
+`evaluate_stock_stance`. The adapter multiplies decimal return by 100, passes
+interval width in percentage points, and reads annual one-year volatility from
+the recommended asset's catalogue risk data. It uses the authenticated caller's
+saved risk level, never a browser-supplied risk tier. Twenty-session model
+volatility is not substituted for the engine's one-year volatility.
+
+No dated runtime sentiment source exists yet. Sentiment remains `None`, with an
+explicit coverage-gap explanation; the rule engine no longer presents missing
+sentiment as measured neutral. Existing numeric thresholds and research stances
+remain unchanged. Missing/nonfinite volatility or an invalid risk profile means
+no stance is generated. Stale forecast/risk snapshots are labeled historical.
+
+The API returns `stance`, `decision_trace`, `assessment_status` and `rule_inputs`
+with each forecast; the dashboard displays the stance and expandable reasons.
+Forecast values and uncertainty intervals are preserved. The handoff uses direct
+function arguments, not a CSV file round-trip. `forecasts.csv` remains a local
+artifact export; user-specific rule assessments are generated in the request
+and are not written to the shared deployment package. The legacy selected-ticker
+endpoint remains a raw forecast interface; dashboard integration uses the
+recommended endpoint. No current sentiment/news collection, database writes or
+financial trade actions are added.
+
+## Dedicated Forecasts page
+
+`/forecasts` now loads the signed-in user's recommendations and reuses the
+dashboard forecast panel, including uncertainty, stance and decision trace.
+Ticker query parameters are no longer required by this page. Missing profile,
+empty recommendations and request failures have explicit page states. The
+backend legacy selected-ticker API remains available for compatibility.
