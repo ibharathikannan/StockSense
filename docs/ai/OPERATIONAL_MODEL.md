@@ -106,3 +106,10 @@ are stored as fractions there and scaled to percent for the rule engine; each ti
 return, interval width and downside bound feed `evaluate_signal`. Tickers with no saved forecast
 fall back to a per-ticker "forecast pending" placeholder and stay conservative. The forecast
 model itself is owned separately; this layer only reads its provisioned results.
+
+Because stock-return forecasts are weak (near coin-flip), the point estimate is **confidence
+gated** before it can move the stance (`confident_signal_return`): it only counts when the 10-day
+interval clears zero and the magnitude exceeds a small noise band (`NEUTRAL_RETURN_BAND`, 0.5pp).
+Otherwise it is fed to the engine as a neutral 0.0 — the real numbers still appear in the forecast
+panel and the interval still drives the uncertainty caveats, but a noisy small negative can no
+longer force a false CAUTION. Lower the band to trust weaker forecasts; raise it to trust less.

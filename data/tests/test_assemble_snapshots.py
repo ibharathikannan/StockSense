@@ -68,11 +68,29 @@ def test_load_forecasts_absent_returns_empty(tmp_path):
     assert load_forecasts(None) in ({}, load_forecasts(None))  # None without env var -> {}
 
 
-def test_real_negative_forecast_drives_caution(tmp_path):
-    # Regression: the old 0.0 placeholder never tripped the negative-return rule; a real
-    # negative forecast must, even with no news.
-    fc = load_forecasts(str(_write_forecasts(tmp_path, [("AAPL", -0.02, -0.05, 0.01)])))
+def test_confident_negative_forecast_drives_caution(tmp_path):
+    # Regression: the old 0.0 placeholder never tripped the negative-return rule. A forecast
+    # that is confidently negative (whole interval below zero) must, even with no news.
+    fc = load_forecasts(str(_write_forecasts(tmp_path, [("AAPL", -0.02, -0.035, -0.005)])))
     snap = build_snapshot(PROFILE, "moderate", None, EVIDENCE, fc["AAPL"], AS_OF)
     assert snap["signal"]["news_aware_stance"] == "CAUTION"
     assert snap["forecast"]["return_10d"] == -2.0
     assert not any("Forecast pending" in t for t in snap["signal"]["decision_trace"])
+
+
+def test_weak_forecast_straddling_zero_is_neutral(tmp_path):
+    # A negative point estimate whose interval still spans zero is within the model's noise,
+    # so it must NOT force CAUTION — the weak forecaster does not get to move the stance.
+    fc = load_forecasts(str(_write_forecasts(tmp_path, [("AAPL", -0.02, -0.05, 0.03)])))
+    snap = build_snapshot(PROFILE, "moderate", None, EVIDENCE, fc["AAPL"], AS_OF)
+    assert snap["signal"]["news_aware_stance"] == "MONITOR"
+    assert snap["forecast"]["return_10d"] == -2.0          # the real number is still shown
+    assert any("treated as neutral" in t for t in snap["signal"]["decision_trace"])
+
+
+def test_tiny_forecast_within_noise_band_is_neutral(tmp_path):
+    # Confident direction but economically negligible magnitude (< NEUTRAL_RETURN_BAND).
+    fc = load_forecasts(str(_write_forecasts(tmp_path, [("AAPL", 0.003, 0.001, 0.005)])))
+    snap = build_snapshot(PROFILE, "moderate", None, EVIDENCE, fc["AAPL"], AS_OF)
+    assert snap["signal"]["news_aware_stance"] == "MONITOR"
+    assert any("treated as neutral" in t for t in snap["signal"]["decision_trace"])

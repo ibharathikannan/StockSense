@@ -44,6 +44,15 @@ RISK_TIERS = ["very_conservative", "conservative", "moderate", "growth", "aggres
 NEWS_CONFIG = AggregationConfig(relevance_floor=0.0, window_hours=168, min_articles=2)
 OUTPUT = Path("data/artifacts/snapshots/snapshots.jsonl")
 
+# Stock-return forecasts are weak (near coin-flip; see docs/ai/OPERATIONAL_MODEL.md and the
+# forecasting evaluation). So the point estimate is only trusted to MOVE the stance when the
+# model is directionally confident: its 10-day interval must clear zero AND the estimate must
+# exceed a small noise band. Otherwise we feed the engine a neutral 0.0 — the real numbers are
+# still shown in the forecast panel, and the interval still drives the uncertainty caveats, but
+# a noisy small negative can no longer force a false CAUTION. Lower the band to let weaker
+# forecasts count; raise it to trust the forecast less.
+NEUTRAL_RETURN_BAND = 0.5   # percent; |predicted 10-day return| below this is treated as noise
+
 
 def placeholder_forecast(ticker: str) -> dict:
     """Forecast seam. Returns 'pending' when no saved forecast is available for this ticker."""
@@ -140,12 +149,29 @@ def marketaux_news_evidence(docs: list[dict], ticker: str, as_of: datetime, limi
     return [evidence for _, evidence in items[:limit]]
 
 
+def confident_signal_return(forecast: dict) -> tuple[float, bool]:
+    """The return value fed to the engine, and whether the forecast is directionally confident.
+
+    A weak forecast whose interval straddles zero, or whose estimate is within the noise band,
+    is neutralised to 0.0 so it cannot force a CAUTION on noise. The displayed forecast numbers
+    are untouched; only the stance decision uses this gated value.
+    """
+    r = forecast.get("return_10d")
+    if r is None:
+        return 0.0, False
+    lower, upper = forecast.get("lower"), forecast.get("upper")
+    straddles_zero = lower is not None and upper is not None and lower < 0 < upper
+    if straddles_zero or abs(r) < NEUTRAL_RETURN_BAND:
+        return 0.0, False
+    return r, True
+
+
 def build_snapshot(profile: dict, risk_profile: str, news_signal: dict | None,
                    evidence: list[dict], forecast: dict, as_of: datetime) -> dict:
     """Assemble one RecommendationSnapshot (pure given its inputs)."""
     volatility = (profile.get("risk") or {}).get("volatility_1y")
     has_forecast = forecast.get("return_10d") is not None
-    forecast_return = forecast["return_10d"] if has_forecast else 0.0
+    forecast_return, confident = confident_signal_return(forecast)
     interval = None
     lower_bound = forecast.get("lower") if has_forecast else None
     if has_forecast and forecast.get("upper") is not None and forecast.get("lower") is not None:
@@ -160,6 +186,11 @@ def build_snapshot(profile: dict, risk_profile: str, news_signal: dict | None,
         signal["decision_trace"].insert(
             0, "Forecast pending: no saved 10-day forecast is available for this ticker; "
                "this stance reflects volatility and news only.")
+    elif not confident:
+        signal["decision_trace"].insert(
+            0, f"Forecast treated as neutral: the 10-day estimate ({forecast['return_10d']:+.1f}%) "
+               "is within the model's uncertainty, so it does not move the stance — stock-return "
+               "forecasts are weak and only a directionally confident forecast counts.")
 
     explanation = explain(signal, evidence, profile["ticker"])
     return {
