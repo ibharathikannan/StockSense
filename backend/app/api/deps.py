@@ -14,12 +14,14 @@ from app.core.security import decode_access_token
 from app.repositories.assets import AssetsRepository
 from app.repositories.forecasts import ForecastRepository
 from app.repositories.profiles import ProfilesRepository
+from app.repositories.recommendations import RecommendationsRepository
 from app.repositories.roles import RolesRepository
 from app.repositories.users import UsersRepository
 from app.services.dashboard import DashboardService
 from app.services.forecasts import ForecastService
 from app.services.profiles import ProfileService
 from app.services.recommendations import RecommendationService
+from app.services.research import ResearchService
 from app.services.users import UserService
 
 bearer_scheme = HTTPBearer(auto_error=False)
@@ -43,6 +45,16 @@ def get_assets_repo(db: asyncpg.Pool = Depends(get_db)) -> AssetsRepository:
 
 def get_profiles_repo(db: asyncpg.Pool = Depends(get_db)) -> ProfilesRepository:
     return ProfilesRepository(db)
+
+
+def get_recommendations_repo(db: asyncpg.Pool = Depends(get_db)) -> RecommendationsRepository:
+    return RecommendationsRepository(db)
+
+
+def get_research_service(
+    recs: RecommendationsRepository = Depends(get_recommendations_repo),
+) -> ResearchService:
+    return ResearchService(recs)
 
 
 def get_user_service(

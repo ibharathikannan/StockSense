@@ -132,8 +132,12 @@ def _av_records(article: dict, universe: set[str], fetched_at: str) -> list[dict
     source_url = article.get("url") or ""
     provider_id = stable_hash(source_url or (article.get("title", "") + article["time_published"]))
     content_hash = stable_hash(text)
+    # Persist Alpha Vantage's original per-ticker sentiment, INCLUDING relevance_score.
+    # The P1 attribution diagnostic showed relevance was being dropped here, which is the
+    # one field needed for relevance-weighted aggregation (it cannot be recovered later).
     sentiments = {item["ticker"]: {"label": item.get("ticker_sentiment_label"),
-                                     "score": item.get("ticker_sentiment_score")}
+                                     "score": item.get("ticker_sentiment_score"),
+                                     "relevance": item.get("relevance_score")}
                   for item in tagged if item.get("ticker") in tickers}
     return [{
         "document_id": f"news:alpha_vantage:{provider_id}:{content_hash[:12]}",

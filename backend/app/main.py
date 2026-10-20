@@ -11,6 +11,7 @@ from app.api.routers import (
     assets,
     auth,
     dashboard,
+    discovery,
     forecasts,
     profile,
     recommendations,
@@ -49,8 +50,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     )
 
     # Routes read settings through Depends(get_settings); make them see the same
-    # instance this app was built with (matters when create_app(custom_settings)
-    # is used, e.g. in tests).
+    # instance this app was built with (matters when create_app(custom_settings) is used, e.g. in tests).
     app.dependency_overrides[get_settings] = lambda: settings
 
     app.add_middleware(
@@ -93,6 +93,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(assets.router)
     app.include_router(forecasts.router)
     app.include_router(recommendations.router)
+    app.include_router(discovery.router)
     app.include_router(dashboard.router)
 
     return app

@@ -60,6 +60,29 @@ CREATE TABLE IF NOT EXISTS profiles (
     created_at       TIMESTAMPTZ NOT NULL,
     updated_at       TIMESTAMPTZ NOT NULL
 );
+
+-- One precomputed research snapshot per ticker x risk tier, written by the offline
+-- snapshot assembler (data/). The dashboard reads these directly. The per-user
+-- diversification note and the concentration downgrade are applied at request time
+-- and are deliberately NOT stored here. baseline_stance/news_aware_stance are kept as
+-- columns for cheap filtering; the richer detail lives in the JSONB payloads.
+CREATE TABLE IF NOT EXISTS recommendation_snapshots (
+    ticker            TEXT NOT NULL REFERENCES assets (ticker) ON DELETE CASCADE,
+    risk_profile      TEXT NOT NULL,
+    as_of             DATE,
+    baseline_stance   TEXT NOT NULL,
+    news_aware_stance TEXT NOT NULL,
+    provisional       BOOLEAN NOT NULL DEFAULT FALSE,  -- true == MONITOR* (experimental)
+    forecast          JSONB NOT NULL DEFAULT '{}'::jsonb,
+    signal_detail     JSONB NOT NULL DEFAULT '{}'::jsonb,  -- decision_trace, news_signal
+    evidence          JSONB NOT NULL DEFAULT '[]'::jsonb,
+    explanation       JSONB NOT NULL DEFAULT '{}'::jsonb,
+    model_version     TEXT,
+    generated_at      TIMESTAMPTZ NOT NULL DEFAULT now(),
+    PRIMARY KEY (ticker, risk_profile)
+);
+CREATE INDEX IF NOT EXISTS recommendation_snapshots_stance_idx
+    ON recommendation_snapshots (news_aware_stance);
 """
 
 # Arbitrary constant: serialises schema creation when several processes start at once
