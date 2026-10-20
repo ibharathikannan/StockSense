@@ -1,5 +1,89 @@
 # AI work plan
 
+## Authorized rule-engine handoff
+
+The user requested automatic forecasting-to-rule-engine integration. The
+recommended forecast API now supplies percent-unit forecast return, unchanged
+interval width, catalogue one-year volatility and the caller's saved risk tier
+to the existing deterministic rules, returning stance and decision trace for
+dashboard display. Missing sentiment remains unavailable; missing risk inputs
+suppress a stance; stale inputs produce historical assessments. No sentiment
+provider, altered numeric thresholds, recommendation-ranking change, runtime
+training, database write, commit, push or deployment is included.
+
+## Local artifact deployment — superseding numeric SQL inference
+
+The user subsequently requested local Yahoo training/retraining and manual upload
+of a versioned saved model plus latest predictor snapshot. Application forecasting
+now reads only that local package; it does not depend on numeric SQL tables.
+Normal authentication/profile/recommendation storage remains unchanged. Add a
+manual offline command with explicit Yahoo opt-in or an existing Parquet source,
+completed-session cutoff, purged validation/calibration and a new ignored output
+folder. Preserve all committed source data and previous model versions. No
+scheduler, provider downloads inside requests, cloud upload, commit or push.
+
+## Saved-model recommender integration — 2026-10-14
+
+The user authorized importing Bharathi's unmerged recommender/dashboard code and
+building authenticated saved-XGBoost inference for only those recommendations.
+Numeric tables remain manually maintained by the teammate. There is no automatic
+price download, scheduled refresh, runtime training or model promotion. The lead
+owns integration, saved-model loading, read-only SQL, runtime dependencies,
+configuration, packaging and docs; frontend ownership covers the dashboard
+forecast panel; notebook ownership covers the separate Git-tracked research
+walkthrough; validation owns recommendation-scoped API checks. Original data,
+weights and secrets remain ignored/preserved. Stop after local tests and review;
+no commit, push, merge to main or deployment is authorized by this implementation.
+
+The application may load only an administrator-provisioned trusted artifact,
+check its hash/feature/runtime contract, and apply saved preprocessing and
+calibration. Updated input dates and model dates remain visible. Source tables
+must provide completed after-close features and matching raw prices. The new
+research notebook separates reported Colab history from reproducible repository
+runs; its experiments are not deployed. Earlier CSV serving remains a legacy
+mode, with configured model inference taking precedence and failing closed.
+
+## Subsequent authorization — 2026-10-08
+
+The user authorized repository implementation of the selected forecasting
+approach and uncertainty outputs. This supersedes the gate-only stop point for
+the bounded offline price-only forecasting phase. Implement the 27 relative
+predictors, XGBoost/Ridge/mean/median selection, training-only preprocessing, purged
+inner/calibration/evaluation windows, persisted local bundles and read-only
+local/shared PostgreSQL input adapters. See `data/FORECASTING.md`.
+
+Ownership: the lead owns modeling, CLI, integration and docs; two workers own
+input preparation/source adapters and their tests; independent validation owns
+model tests. Source tables/baselines are preserved. Artifacts stay ignored and
+no provider refresh is performed. The user subsequently requested XGBoost as
+the application model. Its default selection compares 1/10/50 boosting rounds
+on inner MAE, with RMSE as tie-breaker; baselines remain diagnostic comparisons.
+Current-direction results do not establish a learned advantage.
+
+The user later authorized stronger XGBoost training with yearly walk-forward
+validation, bounded hyperparameter search and independent interval calibration.
+`data/forecasting/walkforward.py` evaluates 2024/2025/partial2026; initial training
+history is insufficient for the same 2023 fold with the retained 252-row minimum.
+It refits inner-selected parameters before calibration and compares Ridge and
+separately calibrated constants on identical later rows. All results remain
+retrospective and do not establish directional skill. No downloads or production
+configuration changes are included in this extension.
+
+The user subsequently authorized web integration on the same date and specified
+that only tickers selected by the content-based recommender receive web forecast
+results. Add an authenticated selected-ticker API and frontend results view,
+reading validated precomputed outputs without training or loading pickle in the
+web process. No content-based recommender implementation exists in this checkout;
+provide an explicit shortlist handoff contract rather than inventing selections.
+
+This phase does not authorize a Transformer, macro/text modeling, RAG, new
+recommendation algorithms, database schema writes, deployment, or a Git push.
+Stop after locally verified integration. The user explicitly requires testing
+before any commit; current changes remain uncommitted.
+
+The sections below retain the history of earlier independent authorizations;
+their gate-only prohibitions do not override this later user request.
+
 ## Authorized work and stop point
 
 Collection, preparation and shared-data migration are complete. On 2026-10-03

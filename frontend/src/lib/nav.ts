@@ -1,4 +1,4 @@
-import { Compass, LayoutDashboard, Settings, ShieldCheck, UserCircle, Users } from "lucide-react";
+import { ChartNoAxesCombined, Compass, LayoutDashboard, Settings, ShieldCheck, UserCircle, Users } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 export interface NavItem {
@@ -13,6 +13,7 @@ export interface NavItem {
 export const NAV_ITEMS: NavItem[] = [
   { label: "Dashboard", href: "/", icon: LayoutDashboard },
   { label: "Discover", href: "/discover", icon: Compass },
+  { label: "Forecasts", href: "/forecasts", icon: ChartNoAxesCombined },
   { label: "Users", href: "/users", icon: Users, permission: "users:read" },
   { label: "Roles", href: "/roles", icon: ShieldCheck, permission: "roles:read" },
   { label: "Profile", href: "/profile", icon: UserCircle },

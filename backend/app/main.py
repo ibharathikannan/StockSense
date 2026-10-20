@@ -7,7 +7,17 @@ from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from app.api.routers import assets, auth, profile, recommendations, roles, users
+from app.api.routers import (
+    assets,
+    auth,
+    dashboard,
+    discovery,
+    forecasts,
+    profile,
+    recommendations,
+    roles,
+    users,
+)
 from app.core.config import Settings, get_settings
 from app.db.postgres import create_pool, ensure_schema
 from app.seed import seed_defaults
@@ -51,17 +61,28 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         allow_headers=["*"],
     )
 
-    # Services raise domain errors (NotFound, Conflict, ...); render them as FastAPI-style JSON.
+    # Services raise domain errors (NotFound, Conflict, ...);
+    # render them as FastAPI-style JSON.
     @app.exception_handler(ServiceError)
-    async def service_error_handler(_: Request, exc: ServiceError) -> JSONResponse:
-        return JSONResponse({"detail": exc.detail}, status_code=exc.status_code)
+    async def service_error_handler(
+        _: Request,
+        exc: ServiceError,
+    ) -> JSONResponse:
+        return JSONResponse(
+            {"detail": exc.detail},
+            status_code=exc.status_code,
+        )
 
     @app.get("/api/health", tags=["health"])
     async def health(request: Request) -> dict[str, str]:
         try:
             await request.app.state.db.fetchval("SELECT 1")
         except Exception:
-            raise HTTPException(503, detail="Database unavailable") from None
+            raise HTTPException(
+                503,
+                detail="Database unavailable",
+            ) from None
+
         return {"status": "ok"}
 
     # Register new modules here.
@@ -70,7 +91,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(roles.router)
     app.include_router(profile.router)
     app.include_router(assets.router)
+    app.include_router(forecasts.router)
     app.include_router(recommendations.router)
+    app.include_router(discovery.router)
+    app.include_router(dashboard.router)
 
     return app
 
@@ -81,4 +105,9 @@ if __name__ == "__main__":
     import uvicorn
 
     s = get_settings()
-    uvicorn.run("app.main:app", host=s.api_host, port=s.api_port, reload=not s.is_production)
+    uvicorn.run(
+        "app.main:app",
+        host=s.api_host,
+        port=s.api_port,
+        reload=not s.is_production,
+    )

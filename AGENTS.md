@@ -7,7 +7,7 @@ StockSense is a stock-intelligence project with two deliberately separate areas:
 - A full-stack web application built with FastAPI, Next.js, and PostgreSQL (Azure Database for PostgreSQL). The current runtime provides authentication, registration, user administration, roles, and permission-based access control.
 - An offline market-data pipeline that downloads price and macroeconomic data and builds time-series features for future forecasting work.
 
-Model training, model serving, forecasts in the web application, portfolio management, brokerage integration, and trade execution are not implemented yet. Do not invent or add these capabilities unless the task explicitly expands the scope. This project must not present output as personalized financial advice.
+Experimental offline forecasting and authenticated saved-model inference for content-based recommendations are implemented. Forecasting uses a trusted versioned local model-and-feature package; training, feature refresh and Yahoo downloads happen only through explicit offline commands. Production forecasting does not query numeric SQL tables. Only trusted administrator-provisioned model artifacts may be loaded. Portfolio management, brokerage integration and trade execution are not implemented; do not add them without explicit authorization. This project must not present output as personalized financial advice.
 
 Read the root `README.md` before broad changes. Read `frontend/README.md` or `data/README.md` before working in those areas.
 

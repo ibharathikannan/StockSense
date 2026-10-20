@@ -3,7 +3,8 @@
 The base engine (backend/app/rule_engine/rule_based_engine.py, PR #16) is unchanged and has
 its own tests under backend/tests/. Here we test the hybrid wrapper that runs it without/with
 news: the baseline is conservative (never EXPLORE without bullish sentiment), and eligible
-recent news can upgrade to EXPLORE or downgrade to CAUTION, flagged provisional. Deterministic.
+recent news may only make the stance MORE cautious — negative news can downgrade to CAUTION
+(flagged provisional), unvalidated positive news is never used to upgrade. Deterministic.
 """
 from backend.app.rule_engine.hybrid_engine import evaluate_signal
 from backend.app.rule_engine.rule_based_engine import evaluate_stock_stance
@@ -32,19 +33,21 @@ def test_volatility_exceeds_profile_is_caution():
     assert s["baseline_stance"] == "CAUTION"
 
 
-# --- News-aware changes ------------------------------------------------------------
+# --- News-aware changes: news may only add caution ---------------------------------
 
-def test_bullish_news_upgrades_monitor_to_explore_provisional():
+def test_bullish_news_does_not_upgrade_stays_at_baseline():
+    # Unvalidated positive news may never raise the stance; the MONITOR baseline holds.
     s = evaluate_signal(4.0, 0.18, prediction_interval_width=3.0, news_signal=_news(0.3))
     assert s["baseline_stance"] == "MONITOR"
-    assert s["news_aware_stance"] == "EXPLORE" and s["provisional"] is True
-    assert any("News-driven change" in t for t in s["decision_trace"])
+    assert s["news_aware_stance"] == "MONITOR" and s["provisional"] is False
+    assert any("positive" in t for t in s["decision_trace"])
     assert s["news_signal"]["source"] == "marketaux"
 
 
 def test_bearish_news_downgrades_to_caution_provisional():
     s = evaluate_signal(4.0, 0.18, prediction_interval_width=3.0, news_signal=_news(-0.3))
     assert s["news_aware_stance"] == "CAUTION" and s["provisional"] is True
+    assert any("News-driven caution" in t for t in s["decision_trace"])
 
 
 def test_no_usable_news_stays_at_baseline():
@@ -56,10 +59,23 @@ def test_no_usable_news_stays_at_baseline():
 
 
 def test_sector_concentration_blocks_explore():
-    # Bullish news that would normally reach EXPLORE, but heavy sector weight holds it at MONITOR.
+    # Heavy sector weight holds the baseline at MONITOR; positive news cannot lift it.
     s = evaluate_signal(4.0, 0.18, prediction_interval_width=3.0, news_signal=_news(0.3),
                         sector_weight=0.5)
     assert s["news_aware_stance"] == "MONITOR"
+
+
+def test_missing_sentiment_fallback():
+    """Missing news sentiment remains unavailable and yields MONITOR (base engine)."""
+    result = evaluate_stock_stance(
+        forecast_return=2.5,
+        volatility=0.25,
+        sentiment_score=None,
+        prediction_interval_width=4.0,
+        user_risk_profile="moderate"
+    )
+    assert result["stance"] == "MONITOR"
+    assert any("News coverage gap" in trace for trace in result["decision_trace"])
 
 
 def test_high_uncertainty_blocks_explore():

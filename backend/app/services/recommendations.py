@@ -1,38 +1,42 @@
 from __future__ import annotations
 
+import uuid
+from collections.abc import Mapping, Sequence
 from typing import Any
 
-from app.repositories.recommendations import RecommendationsRepository
-from app.schemas.recommendations import DiscoveryResponse, DiversificationNote, RecommendationSnapshot
-from app.services.discovery import diversification as compute_diversification
-from app.services.discovery import interest_targets
-from app.services.errors import NotFound
+from app.recommender import ContentBasedRecommender, Recommendation
+from app.repositories.assets import AssetsRepository
+from app.repositories.profiles import ProfilesRepository
+from app.services.errors import Conflict
+
+PROFILE_REQUIRED = "Complete your investor profile to get suggestions"
+
+
+def recommend_for_profile(
+    profile: Mapping[str, Any], catalogue: Sequence[Mapping[str, Any]], limit: int
+) -> list[Recommendation]:
+    """Rank the catalogue for a saved investor profile (an empty catalogue gives no suggestions)."""
+    if not catalogue:
+        return []
+    # Fitted per call (about 10 ms for the 90-asset catalogue), so it is never stale.
+    return ContentBasedRecommender(catalogue).recommend(
+        interests=profile["interests"],
+        followed_tickers=profile["followed_tickers"],
+        risk_level=profile["risk_level"],
+        asset_types=profile["asset_types"],
+        limit=limit,
+    )
 
 
 class RecommendationService:
-    """Serves precomputed snapshots and layers on the request-time, per-user view:
-    the matching discovery set and a diversification note from the user's followed assets.
-    The news-aware stance is the operative signal (see docs/ai/OPERATIONAL_MODEL.md)."""
+    """Content-based suggestions: catalogue assets that resemble the investor's profile."""
 
-    def __init__(self, recs: RecommendationsRepository) -> None:
-        self._recs = recs
+    def __init__(self, profiles: ProfilesRepository, assets: AssetsRepository) -> None:
+        self._profiles = profiles
+        self._assets = assets
 
-    async def get_detail(self, ticker: str, profile: dict[str, Any]) -> RecommendationSnapshot:
-        row = await self._recs.get(ticker, profile["risk_level"])
-        if not row:
-            raise NotFound(f"No recommendation available for '{ticker.strip().upper()}'.")
-        return RecommendationSnapshot.from_row(row)
-
-    async def get_discovery(self, profile: dict[str, Any], limit: int = 20) -> DiscoveryResponse:
-        sectors, themes = interest_targets(profile.get("interests") or [])
-        rows = await self._recs.list_for_profile(profile["risk_level"], list(sectors),
-                                                 list(themes), limit)
-        candidates = [RecommendationSnapshot.from_row(r) for r in rows]
-
-        followed = profile.get("followed_tickers") or []
-        followed_sectors = await self._recs.followed_sectors(followed)
-        assets_by_ticker = {t: {"ticker": t, "sector": s} for t, s in followed_sectors.items()}
-        cand_dicts = [{"ticker": c.ticker, "sector": c.sector} for c in candidates]
-        div = compute_diversification(assets_by_ticker, profile, cand_dicts)
-
-        return DiscoveryResponse(candidates=candidates, diversification=DiversificationNote(**div))
+    async def for_user(self, user_id: uuid.UUID, limit: int) -> list[Recommendation]:
+        profile = await self._profiles.get(user_id)
+        if not profile:
+            raise Conflict(PROFILE_REQUIRED)
+        return recommend_for_profile(profile, await self._assets.list_recommendable(), limit)

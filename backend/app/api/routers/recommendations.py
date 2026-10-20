@@ -1,42 +1,27 @@
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, HTTPException, Path, status
+from dataclasses import asdict
 
-from app.api.deps import Principal, get_current_principal, get_profiles_repo, get_recommendation_service
-from app.repositories.profiles import ProfilesRepository
-from app.schemas.recommendations import DiscoveryResponse, RecommendationSnapshot
+from fastapi import APIRouter, Depends, Query
+
+from app.api.deps import Principal, get_current_principal, get_recommendation_service
+from app.core.config import MAX_RECOMMENDATIONS, Settings, get_settings
+from app.schemas.recommendation import RecommendationOut
 from app.services.recommendations import RecommendationService
 
+# Self-service: every signed-in user gets suggestions for their own profile only.
 router = APIRouter(prefix="/api/recommendations", tags=["recommendations"])
 
 
-async def _require_profile(principal: Principal, profiles: ProfilesRepository) -> dict:
-    """Recommendations are personalised, so the caller must have completed onboarding."""
-    profile = await profiles.get(principal.user["id"])
-    if not profile:
-        raise HTTPException(status.HTTP_409_CONFLICT,
-                            detail="Complete onboarding to get personalised recommendations.")
-    return profile
-
-
-@router.get("", response_model=DiscoveryResponse)
-async def discovery(
+@router.get("", response_model=list[RecommendationOut])
+async def list_recommendations(
+    limit: int | None = Query(
+        None, ge=1, le=MAX_RECOMMENDATIONS, description="How many to return; defaults to the RECOMMENDATIONS_LIMIT setting"
+    ),
     principal: Principal = Depends(get_current_principal),
+    settings: Settings = Depends(get_settings),
     service: RecommendationService = Depends(get_recommendation_service),
-    profiles: ProfilesRepository = Depends(get_profiles_repo),
-) -> DiscoveryResponse:
-    """The personalised research set for the signed-in user, plus a diversification note."""
-    profile = await _require_profile(principal, profiles)
-    return await service.get_discovery(profile)
-
-
-@router.get("/{ticker}", response_model=RecommendationSnapshot)
-async def detail(
-    ticker: str = Path(min_length=1, max_length=10),
-    principal: Principal = Depends(get_current_principal),
-    service: RecommendationService = Depends(get_recommendation_service),
-    profiles: ProfilesRepository = Depends(get_profiles_repo),
-) -> RecommendationSnapshot:
-    """The full research snapshot for one asset at the user's risk tier (company detail page)."""
-    profile = await _require_profile(principal, profiles)
-    return await service.get_detail(ticker, profile)
+) -> list[dict]:
+    """Assets that match the caller's interests, followed tickers and risk level, best first, with reasons."""
+    count = limit if limit is not None else settings.recommendations_limit
+    return [asdict(r) for r in await service.for_user(principal.user["id"], count)]

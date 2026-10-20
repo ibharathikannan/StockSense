@@ -1,0 +1,5 @@
+# Optional offline forecasting dependencies; not application-runtime dependencies.
+# Install alongside data/requirements.txt in a dedicated environment.
+scikit-learn>=1.6,<2
+joblib>=1.4,<2
+xgboost>=3.1,<4
