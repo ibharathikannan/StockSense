@@ -3,19 +3,21 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
+import asyncpg
 import jwt
 from fastapi import Depends, HTTPException, Request, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-import asyncpg
 
 from app.core.config import Settings, get_settings
 from app.core.permissions import ADMIN_ROLE, effective_permissions
 from app.core.security import decode_access_token
 from app.repositories.assets import AssetsRepository
+from app.repositories.forecasts import ForecastRepository
 from app.repositories.profiles import ProfilesRepository
 from app.repositories.roles import RolesRepository
 from app.repositories.users import UsersRepository
 from app.services.dashboard import DashboardService
+from app.services.forecasts import ForecastService
 from app.services.profiles import ProfileService
 from app.services.recommendations import RecommendationService
 from app.services.users import UserService
@@ -57,6 +59,31 @@ def get_profile_service(
     return ProfileService(profiles, assets)
 
 
+def get_forecast_service(
+    request: Request,
+    settings: Settings = Depends(get_settings),
+):
+    if settings.forecast_model_dir is not None:
+        from app.repositories.forecast_feature_snapshot import SnapshotFeatureRepository
+        from app.services.forecast_inference import ForecastInferenceService
+
+        return ForecastInferenceService(
+            SnapshotFeatureRepository(settings.forecast_model_dir),
+            settings.forecast_model_dir,
+        )
+
+    return ForecastService(ForecastRepository(settings.forecast_results_dir))
+
+
+def get_forecast_assessment_service(
+    profiles: ProfilesRepository = Depends(get_profiles_repo),
+    assets: AssetsRepository = Depends(get_assets_repo),
+):
+    from app.services.forecast_assessment import ForecastAssessmentService
+
+    return ForecastAssessmentService(profiles, assets)
+
+
 def get_recommendation_service(
     profiles: ProfilesRepository = Depends(get_profiles_repo),
     assets: AssetsRepository = Depends(get_assets_repo),
@@ -84,7 +111,11 @@ class Principal:
 
 
 def _unauthorized(detail: str) -> HTTPException:
-    return HTTPException(status.HTTP_401_UNAUTHORIZED, detail=detail, headers={"WWW-Authenticate": "Bearer"})
+    return HTTPException(
+        status.HTTP_401_UNAUTHORIZED,
+        detail=detail,
+        headers={"WWW-Authenticate": "Bearer"},
+    )
 
 
 async def get_current_principal(
@@ -101,7 +132,12 @@ async def get_current_principal(
     app). The user and their role are re-read from the database on every request,
     so deactivating a user or editing a role takes effect immediately.
     """
-    token = credentials.credentials if credentials else request.cookies.get(settings.cookie_name)
+    token = (
+        credentials.credentials
+        if credentials
+        else request.cookies.get(settings.cookie_name)
+    )
+
     if not token:
         raise _unauthorized("Not authenticated")
 
@@ -115,27 +151,48 @@ async def get_current_principal(
         raise _unauthorized("User not found or inactive")
 
     role = await roles.get(user["role"])
-    return Principal(user=user, permissions=effective_permissions(role))
+
+    return Principal(
+        user=user,
+        permissions=effective_permissions(role),
+    )
 
 
 def require_permissions(*required: str):
-    """Dependency factory: the caller must hold **all** of the given permissions."""
+    """Dependency factory: the caller must hold all required permissions."""
 
-    def _check(principal: Principal = Depends(get_current_principal)) -> Principal:
-        missing = [p for p in required if p not in principal.permissions]
+    def _check(
+        principal: Principal = Depends(get_current_principal),
+    ) -> Principal:
+        missing = [
+            permission
+            for permission in required
+            if permission not in principal.permissions
+        ]
+
         if missing:
-            raise HTTPException(status.HTTP_403_FORBIDDEN, detail=f"Missing permission: {', '.join(missing)}")
+            raise HTTPException(
+                status.HTTP_403_FORBIDDEN,
+                detail=f"Missing permission: {', '.join(missing)}",
+            )
+
         return principal
 
     return _check
 
 
 def require_any_permission(*allowed: str):
-    """Dependency factory: the caller must hold **at least one** of the given permissions."""
+    """Dependency factory: the caller must hold at least one allowed permission."""
 
-    def _check(principal: Principal = Depends(get_current_principal)) -> Principal:
+    def _check(
+        principal: Principal = Depends(get_current_principal),
+    ) -> Principal:
         if not principal.permissions.intersection(allowed):
-            raise HTTPException(status.HTTP_403_FORBIDDEN, detail=f"Requires one of: {', '.join(allowed)}")
+            raise HTTPException(
+                status.HTTP_403_FORBIDDEN,
+                detail=f"Requires one of: {', '.join(allowed)}",
+            )
+
         return principal
 
     return _check

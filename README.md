@@ -78,6 +78,21 @@ TEST_POSTGRES_PASSWORD=localdev pytest -q        # from backend/; also TEST_POST
 
 ## Shared market and document data
 
+### Experimental selected-stock forecasts
+
+The personal dashboard now includes recommendations and a forecast panel.
+Configure `FORECAST_MODEL_DIR` with a complete trusted local model-and-feature
+package to run saved XGBoost inference only for the signed-in user's recommended
+tickers. Retrain/refresh locally and upload a new package manually; production
+never trains, downloads prices or queries numeric SQL tables. The separate [research notebook](notebooks/forecasting_research.ipynb)
+documents experimental training and comparisons. Model artifacts must be
+provisioned separately; see [the inference setup](data/FORECASTING.md#saved-model-dashboard-inference-local-deployment-package).
+
+The authenticated `/forecasts` page now uses the same recommendation-driven
+forecast panel as the dashboard; no ticker query parameter is needed. A legacy
+selected-ticker API remains available for compatibility. See the forecasting
+guide for model-package setup and the content-recommender handoff.
+
 Local Parquet datasets and prepared SEC/news text can be imported into Azure
 PostgreSQL as queryable tables, with an optional archive of original files.
 See [the shared-data guide](data/SHARED_DATA.md) for setup, import and verification.

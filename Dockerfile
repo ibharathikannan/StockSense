@@ -28,9 +28,15 @@ COPY --from=frontend-build /usr/local/bin/node /usr/local/bin/node
 
 WORKDIR /app
 COPY backend/requirements.txt backend/requirements.txt
-RUN pip install -r backend/requirements.txt
+RUN apt-get update && apt-get install -y --no-install-recommends libgomp1 \
+    && rm -rf /var/lib/apt/lists/* \
+    && pip install -r backend/requirements.txt
 
 COPY backend/app backend/app
+# Only the inference package is needed to deserialize the trusted saved bundle.
+# Runtime PYTHONPATH includes /app; weights/data are provisioned separately.
+COPY data/forecasting /app/data/forecasting
+ENV PYTHONPATH=/app:/app/backend
 COPY --from=frontend-build /frontend/public frontend/public
 COPY --from=frontend-build /frontend/.next/standalone frontend/
 COPY --from=frontend-build /frontend/.next/static frontend/.next/static
