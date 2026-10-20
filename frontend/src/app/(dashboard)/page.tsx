@@ -1,56 +1,106 @@
 "use client";
 
-import Link from "next/link";
-import { Card, Badge, PageHeader } from "@/components/ui";
+import { SlidersHorizontal } from "lucide-react";
+import { DashboardTiles } from "@/components/dashboard/DashboardTiles";
+import { RiskCheckChart } from "@/components/dashboard/RiskCheckChart";
+import { SectorSpreadChart } from "@/components/dashboard/SectorSpreadChart";
+import { SuggestionList } from "@/components/dashboard/SuggestionList";
+import { WatchlistCard } from "@/components/dashboard/WatchlistCard";
+import { Alert, Badge, Card, LinkButton, Skeleton } from "@/components/ui";
 import { useAuth } from "@/lib/auth";
+import { formatDate } from "@/lib/format";
 import { useFetch } from "@/lib/hooks";
-import { rolesService } from "@/services/roles";
-import { usersService } from "@/services/users";
+import { useProfile } from "@/lib/profile";
+import type { Dashboard } from "@/lib/types";
+import { dashboardService } from "@/services/dashboard";
 
-function Stat({ label, value, href }: { label: string; value: number | undefined; href: string }) {
-  return (
-    <Link href={href}>
-      <Card className="p-5 transition-shadow hover:shadow-md">
-        <p className="text-sm text-muted">{label}</p>
-        <p className="mt-2 text-3xl font-semibold tabular-nums">{value ?? "…"}</p>
-      </Card>
-    </Link>
-  );
-}
+const ASSET_TYPE_LABELS: Record<string, string> = { both: "Stocks & ETFs", stock: "Stocks only", etf: "ETFs only" };
 
 export default function DashboardPage() {
-  const { user, can } = useAuth();
-  // Only ask for what this user is allowed to see.
-  const users = useFetch(can("users:read") ? ["users", "count"] : null, () => usersService.list({ pageSize: 1 }));
-  const roles = useFetch(can("roles:read") ? ["roles", "count"] : null, () => rolesService.list({ pageSize: 1 }));
+  const { user } = useAuth();
+  const { profile } = useProfile();
+  // Keyed on the profile's last save, so edits made on the Profile page show up here.
+  const dashboard = useFetch(["dashboard", profile?.updated_at], () => dashboardService.get());
+  const firstName = user?.full_name.split(" ")[0] || "there";
 
   return (
     <>
-      <PageHeader title={`Welcome back, ${user?.full_name.split(" ")[0]}`} description="Here's an overview of your workspace." />
-
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {can("users:read") && <Stat label="Users" value={users.data?.total} href="/users" />}
-        {can("roles:read") && <Stat label="Roles" value={roles.data?.total} href="/roles" />}
-        <Card className="p-5">
-          <p className="text-sm text-muted">Your role</p>
-          <p className="mt-2 text-3xl font-semibold">{user?.role}</p>
-        </Card>
-      </div>
-
-      <Card className="mt-6 p-5">
-        <h2 className="text-sm font-semibold">Your permissions</h2>
-        <div className="mt-3 flex flex-wrap gap-2">
-          {user?.permissions.length ? (
-            user.permissions.map((p) => (
-              <Badge key={p} tone="brand">
-                {p}
-              </Badge>
-            ))
-          ) : (
-            <p className="text-sm text-muted">Your role doesn&apos;t grant any admin permissions.</p>
-          )}
+      <Header firstName={firstName} data={dashboard.data} />
+      {dashboard.error ? (
+        dashboard.error.status === 409 ? (
+          <Alert tone="info">Complete your profile to see your dashboard.</Alert>
+        ) : (
+          <Alert>Couldn&apos;t load your dashboard: {dashboard.error.message}</Alert>
+        )
+      ) : !dashboard.data ? (
+        <DashboardSkeleton />
+      ) : (
+        <div className="space-y-6">
+          <DashboardTiles data={dashboard.data} />
+          <div className="grid gap-6 lg:grid-cols-3">
+            <RiskCheckChart data={dashboard.data} className="lg:col-span-2" />
+            <SectorSpreadChart data={dashboard.data} />
+          </div>
+          <div className="grid gap-6 lg:grid-cols-3">
+            <SuggestionList data={dashboard.data} className="lg:col-span-2" />
+            <WatchlistCard data={dashboard.data} />
+          </div>
         </div>
-      </Card>
+      )}
     </>
+  );
+}
+
+function Header({ firstName, data }: { firstName: string; data?: Dashboard }) {
+  return (
+    <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
+      <div>
+        <h1 className="text-2xl font-semibold tracking-tight">Welcome back, {firstName}</h1>
+        {data ? (
+          <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-muted">
+            <span>Your interests</span>
+            {data.interests.map((i) => (
+              <Badge key={i.key} tone="brand">
+                {i.label}
+              </Badge>
+            ))}
+            <span aria-hidden>·</span>
+            <span>{ASSET_TYPE_LABELS[data.asset_types] ?? data.asset_types}</span>
+            {data.prices_as_of && (
+              <>
+                <span aria-hidden>·</span>
+                <span>Prices up to {formatDate(data.prices_as_of)}</span>
+              </>
+            )}
+          </div>
+        ) : (
+          <p className="mt-1 text-sm text-muted">Your research overview.</p>
+        )}
+      </div>
+      <LinkButton href="/profile" variant="secondary">
+        <SlidersHorizontal className="size-4" aria-hidden />
+        Edit profile
+      </LinkButton>
+    </div>
+  );
+}
+
+function DashboardSkeleton() {
+  return (
+    <div role="status" aria-label="Loading your dashboard" className="space-y-6">
+      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        {Array.from({ length: 4 }, (_, i) => (
+          <Card key={i} className="space-y-3 p-5">
+            <Skeleton className="h-4 w-24" />
+            <Skeleton className="h-7 w-20" />
+            <Skeleton className="h-3 w-40" />
+          </Card>
+        ))}
+      </div>
+      <div className="grid gap-6 lg:grid-cols-3">
+        <Skeleton className="h-72 rounded-xl lg:col-span-2" />
+        <Skeleton className="h-72 rounded-xl" />
+      </div>
+    </div>
   );
 }

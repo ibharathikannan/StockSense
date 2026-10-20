@@ -16,6 +16,14 @@
   --color-gain: #059669;
   --color-loss: #dc2626;
 
+  /* Chart colours (checked for colour-blind separation and contrast on white).
+     Series (identity): watchlist vs suggested. Status: within / above the investor's risk level,
+     always shown with an icon and a text label, never colour alone. */
+  --color-chart-watchlist: #2563eb;
+  --color-chart-suggested: #eb6834;
+  --color-chart-within: #0ca30c;
+  --color-chart-over-limit: #fab219;
+
   --color-surface: #ffffff;
   --color-canvas: #f3f6fb;
   --color-line: #e3e8ef;
