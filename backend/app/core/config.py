@@ -40,7 +40,7 @@ class Settings(BaseSettings):
     # Public self-signup at POST /api/auth/register. Set false so only admins can create users.
     allow_registration: bool = True
 
-      # Legacy saved-result mode; optional trusted model inference takes precedence.
+    # Legacy saved-result mode; optional trusted model inference takes precedence.
     # No fitting or provider refresh occurs in either mode.
     forecast_results_dir: Path | None = None
     forecast_model_dir: Path | None = None
@@ -50,6 +50,8 @@ class Settings(BaseSettings):
     def _empty_forecast_directory(cls, value):
         return None if isinstance(value, str) and not value.strip() else value
 
+    # Suggestions returned by GET /api/recommendations when the request has no ?limit=.
+    recommendations_limit: int = Field(10, ge=1, le=MAX_RECOMMENDATIONS)
 
     api_host: str = "0.0.0.0"
     api_port: int = 8000

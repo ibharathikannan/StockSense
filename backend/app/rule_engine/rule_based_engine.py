@@ -114,7 +114,8 @@ def evaluate_stock_stance(
     if sentiment_score is None:
         sentiment = None
         note("SENTIMENT_MISSING",
-             "News coverage gap: sentiment is unavailable; no sentiment evidence was used.")
+             "Sentiment is unavailable. News coverage gap means no sentiment "
+             "evidence was used.")
     else:
         sentiment = sentiment_score
 
