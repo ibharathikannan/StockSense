@@ -6,16 +6,21 @@ sentiment -> the hybrid signal -> retrieved evidence -> a grounded explanation, 
 RecommendationSnapshot. Snapshots are written to a JSONL artifact that the backend (P8)
 loads into the application database.
 
-The forecast is a pluggable seam: `placeholder_forecast` returns "pending" today; swap it for
-the XGBoost results (once that serving is merged) with no other change. With the placeholder,
-signals are conservative (MONITOR / CAUTION); EXPLORE unlocks when a real forecast lands.
+The forecast is a pluggable seam fed into the hybrid engine (never the base engine directly):
+when main's saved XGBoost results are available (forecasts.csv + report.json, passed via
+--forecasts or found under FORECAST_RESULTS_DIR) each ticker's 10-day return, interval and
+downside bound flow through `evaluate_signal` into the decision. Tickers without a saved
+forecast fall back to `placeholder_forecast` and stay conservative (MONITOR / CAUTION) with a
+"forecast pending" trace line; EXPLORE only unlocks when a real forecast lands.
 
-    python -m data.rag.assemble_snapshots --env-file data/.env
+    python -m data.rag.assemble_snapshots --env-file data/.env --forecasts <dir_or_csv>
 """
 from __future__ import annotations
 
 import argparse
+import csv
 import json
+import os
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -41,9 +46,62 @@ OUTPUT = Path("data/artifacts/snapshots/snapshots.jsonl")
 
 
 def placeholder_forecast(ticker: str) -> dict:
-    """Forecast seam. Returns 'pending' until XGBoost serving is wired in."""
+    """Forecast seam. Returns 'pending' when no saved forecast is available for this ticker."""
     return {"return_10d": None, "lower": None, "upper": None, "model_version": None,
-            "basis": "placeholder — pending XGBoost serving"}
+            "basis": "forecast pending — no saved forecast for this ticker"}
+
+
+def _resolve_forecast_paths(forecasts_arg: str | None) -> tuple[Path | None, Path | None]:
+    """Resolve the forecasts.csv and report.json paths from --forecasts (a dir or the csv
+    itself) or, when omitted, from the FORECAST_RESULTS_DIR environment variable. Returns
+    (csv_path, report_path); either element is None when not found."""
+    base = forecasts_arg or os.environ.get("FORECAST_RESULTS_DIR")
+    if not base:
+        return None, None
+    p = Path(base)
+    if p.is_dir():
+        return p / "forecasts.csv", p / "report.json"
+    # A direct path to forecasts.csv; look for report.json alongside it.
+    return p, p.with_name("report.json")
+
+
+def load_forecasts(forecasts_arg: str | None) -> dict[str, dict]:
+    """Map ticker -> forecast dict (percent units) from main's saved XGBoost results.
+
+    main's forecasts.csv stores returns as fractions (0.032 = +3.2%) with the interval width
+    in percentage points; the rule engine and our snapshot both use percent, so returns are
+    scaled by 100 here. Returns {} when no results are available, so the assembler falls back
+    to the per-ticker placeholder rather than failing.
+    """
+    csv_path, report_path = _resolve_forecast_paths(forecasts_arg)
+    if not csv_path or not csv_path.is_file():
+        return {}
+
+    model_version = None
+    if report_path and report_path.is_file():
+        try:
+            report = json.loads(report_path.read_text())
+            meta = report.get("metadata") or report.get("model_metadata") or {}
+            model_version = meta.get("selected_model")
+        except (OSError, ValueError):
+            model_version = None
+
+    forecasts: dict[str, dict] = {}
+    with csv_path.open(newline="", encoding="utf-8") as fh:
+        for row in csv.DictReader(fh):
+            try:
+                ticker = row["ticker"].strip().upper()
+                ret = float(row["predicted_return_10d"]) * 100
+                lower = float(row["lower_return"]) * 100
+                upper = float(row["upper_return"]) * 100
+            except (KeyError, AttributeError, TypeError, ValueError):
+                continue
+            forecasts[ticker] = {
+                "return_10d": ret, "lower": lower, "upper": upper,
+                "model_version": model_version or (row.get("model") or None),
+                "basis": "development-fold estimate (experimental; XGBoost, 10-session horizon)",
+            }
+    return forecasts
 
 
 def _parse_dt(value):
@@ -89,16 +147,19 @@ def build_snapshot(profile: dict, risk_profile: str, news_signal: dict | None,
     has_forecast = forecast.get("return_10d") is not None
     forecast_return = forecast["return_10d"] if has_forecast else 0.0
     interval = None
+    lower_bound = forecast.get("lower") if has_forecast else None
     if has_forecast and forecast.get("upper") is not None and forecast.get("lower") is not None:
         interval = forecast["upper"] - forecast["lower"]
 
+    # The hybrid engine takes the forecast (return / interval width / downside bound) and runs
+    # the base engine twice around it (baseline + news-aware), so news can still only add caution.
     signal = evaluate_signal(forecast_return=forecast_return, volatility=volatility,
                              risk_profile=risk_profile, prediction_interval_width=interval,
-                             news_signal=news_signal)
+                             forecast_lower_bound=lower_bound, news_signal=news_signal)
     if not has_forecast:
         signal["decision_trace"].insert(
-            0, "Forecast pending: the 10-day forecast is not yet available (XGBoost serving not "
-               "wired); this stance reflects volatility and news only.")
+            0, "Forecast pending: no saved 10-day forecast is available for this ticker; "
+               "this stance reflects volatility and news only.")
 
     explanation = explain(signal, evidence, profile["ticker"])
     return {
@@ -113,7 +174,9 @@ def build_snapshot(profile: dict, risk_profile: str, news_signal: dict | None,
 
 
 def assemble(conn, profiles: list[dict], marketaux_docs: list[dict], as_of: datetime, *,
-             tiers=RISK_TIERS, k: int = 3) -> tuple[list[dict], dict]:
+             forecasts: dict[str, dict] | None = None, tiers=RISK_TIERS,
+             k: int = 3) -> tuple[list[dict], dict]:
+    forecasts = forecasts or {}
     eligible = [p for p in profiles if p.get("recommendation_eligible")]
     tickers = [p["ticker"] for p in eligible]
     news = build_news_signals(records_from_documents(marketaux_docs), tickers, as_of, NEWS_CONFIG)
@@ -124,7 +187,7 @@ def assemble(conn, profiles: list[dict], marketaux_docs: list[dict], as_of: date
 
     snapshots: list[dict] = []
     coverage = {"eligible": len(eligible), "skipped_no_volatility": 0, "with_news": 0,
-                "with_evidence": 0}
+                "with_evidence": 0, "with_forecast": 0}
     for profile in eligible:
         if (profile.get("risk") or {}).get("volatility_1y") is None:
             coverage["skipped_no_volatility"] += 1
@@ -145,7 +208,8 @@ def assemble(conn, profiles: list[dict], marketaux_docs: list[dict], as_of: date
                           tickers=[profile["ticker"]], as_of=as_of, source_types=["sec"], k=2)
         evidence = news_ev + sec_ev
         coverage["with_evidence"] += int(bool(evidence))
-        forecast = placeholder_forecast(profile["ticker"])
+        forecast = forecasts.get(profile["ticker"].strip().upper()) or placeholder_forecast(profile["ticker"])
+        coverage["with_forecast"] += int(forecast.get("return_10d") is not None)
         for tier in tiers:
             snapshots.append(build_snapshot(profile, tier, news_signal, evidence, forecast, as_of))
     coverage["snapshots"] = len(snapshots)
@@ -157,18 +221,27 @@ def main(argv=None) -> int:
     parser.add_argument("--env-file", default=None)
     parser.add_argument("--profiles", default="data/processed/asset_profiles.json")
     parser.add_argument("--marketaux", default="data/artifacts/marketaux/documents.jsonl")
+    parser.add_argument("--forecasts", default=None,
+                        help="Directory holding forecasts.csv + report.json, or the forecasts.csv "
+                             "itself. Defaults to the FORECAST_RESULTS_DIR env var. When absent, "
+                             "tickers fall back to a 'forecast pending' placeholder.")
     parser.add_argument("--output", default=str(OUTPUT))
     parser.add_argument("--k", type=int, default=3)
     args = parser.parse_args(argv)
 
     profiles = json.loads(Path(args.profiles).read_text())
     marketaux_docs = read_jsonl(args.marketaux)
+    forecasts = load_forecasts(args.forecasts)
+    if not forecasts:
+        print("No saved forecasts found (set --forecasts or FORECAST_RESULTS_DIR); "
+              "using the 'forecast pending' placeholder for every ticker.")
     as_of = datetime.now(timezone.utc)
 
     import psycopg
     try:
         with _connect(args.env_file) as conn:
-            snapshots, coverage = assemble(conn, profiles, marketaux_docs, as_of, k=args.k)
+            snapshots, coverage = assemble(conn, profiles, marketaux_docs, as_of,
+                                           forecasts=forecasts, k=args.k)
     except psycopg.Error:
         print("Database operation failed. Check connection settings and credentials.")
         return 1
@@ -180,7 +253,8 @@ def main(argv=None) -> int:
             fh.write(json.dumps(snap) + "\n")
     print(f"Assembled {coverage['snapshots']} snapshots "
           f"({coverage['eligible']} eligible tickers x {len(RISK_TIERS)} tiers; "
-          f"{coverage['with_news']} with news, {coverage['with_evidence']} with evidence, "
+          f"{coverage['with_forecast']} with a real forecast, {coverage['with_news']} with news, "
+          f"{coverage['with_evidence']} with evidence, "
           f"{coverage['skipped_no_volatility']} skipped for missing volatility) -> {out}")
     return 0
 

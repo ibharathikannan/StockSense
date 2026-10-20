@@ -45,23 +45,29 @@ Adding embeddings each day enriches what the explanation can quote; it never mov
 
 ## How the Marketaux score moves the stance
 
-The aggregated per-ticker score is passed to the base rule engine as `sentiment_score`:
+The hybrid engine (`hybrid_engine.evaluate_signal`) runs the base engine twice — once without
+news (baseline) and once with the aggregated per-ticker `sentiment_score` — and then applies one
+safety rule: **unvalidated news may only make the stance MORE cautious, never more optimistic.**
+The operative stance is the more cautious of the two runs.
 
-| Aggregated Marketaux sentiment | Resulting stance |
+| Aggregated Marketaux sentiment | Effect on the stance |
 | --- | --- |
-| ≤ −0.15 (bearish) | **CAUTION** (overrides) |
-| ≥ +0.15 (bullish) + strong forecast + narrow interval + not concentrated | **EXPLORE** |
-| in between / neutral | **MONITOR** |
+| ≤ −0.15 (bearish), eligible | may **lower** the stance toward **CAUTION** (flagged provisional / experimental) |
+| ≥ +0.15 (bullish) | shown as positive context, but **never raises** the stance and never softens a CAUTION |
+| in between / neutral | no change |
 | no eligible news (below relevance/recency/min-article gates) | abstain → forecast-only baseline |
 
-Because the base engine reaches EXPLORE only *with* bullish sentiment, the baseline (no news)
-is conservative — so news genuinely earns an EXPLORE or triggers a CAUTION.
+Because the sentiment signal is not yet validated (see docs/ai/SENTIMENT_ATTRIBUTION.md), it is
+only ever allowed to add caution. The baseline (no news) already needs bullish sentiment to reach
+EXPLORE, so in practice today's stances are MONITOR or CAUTION; letting news earn EXPLORE is a P10
+decision, once validation justifies trusting positive sentiment.
 
 ## What the dashboard shows (confirmed)
 
-- **The news-aware stance is the primary signal** (sentiment affects it, as intended).
+- **The news-aware stance is the primary signal**, but news can only add caution — it never
+  upgrades the forecast-only baseline.
 - The **baseline stance is shown alongside** as "forecast-only context."
-- When news changed the stance, it is flagged **provisional / experimental** — sentiment
+- When news *lowered* the stance, it is flagged **provisional / experimental** — sentiment
   validation is still limited (see docs/ai/SENTIMENT_ATTRIBUTION.md). P10 will compare
   baseline vs news-aware to test whether news actually improves decisions.
 
@@ -91,6 +97,12 @@ Runs as a **nightly end-of-day batch** (matches the proposal's end-of-day model)
 ## Current status against this model
 
 Built: collection, aggregation, hybrid signal engine, embeddings, retrieval, explanation,
-discovery. Not yet built: the **assembler (P7)** that chains aggregate → signal → evidence →
-snapshot into one nightly command, and the backend/frontend that serve the snapshots.
-Forecast is a **neutral placeholder** until XGBoost serving is wired (owned separately).
+discovery, the **assembler (P7)** (aggregate → forecast → signal → evidence → snapshot), and the
+backend/frontend that serve the snapshots (the "Discover" screens at `/api/discovery`).
+
+Forecast: the assembler now consumes the team's saved XGBoost results merged from `main`
+(`forecasts.csv` + `report.json`, passed via `--forecasts` or `FORECAST_RESULTS_DIR`). Returns
+are stored as fractions there and scaled to percent for the rule engine; each ticker's 10-day
+return, interval width and downside bound feed `evaluate_signal`. Tickers with no saved forecast
+fall back to a per-ticker "forecast pending" placeholder and stay conservative. The forecast
+model itself is owned separately; this layer only reads its provisioned results.
