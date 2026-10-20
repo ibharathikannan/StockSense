@@ -1,16 +1,19 @@
 """News-aware layer over the deterministic rule engine.
 
-This keeps the team's `rule_based_engine.evaluate_stock_stance` as the single base decision
-engine and adds the baseline-vs-news-aware view the RAG explanation needs. It runs the base
-engine twice — once WITHOUT news (the forecast / volatility / risk baseline) and once WITH a
-clean, relevance-weighted provider sentiment score (Marketaux; see data/rag/news_sentiment.py)
-— and flags when recent news changed the stance (experimental, pending validation).
+Keeps the team's `rule_based_engine.evaluate_stock_stance` as the single base decision engine.
+It runs the base engine twice — once WITHOUT news (the forecast / volatility / risk baseline)
+and once WITH a clean, relevance-weighted provider sentiment score (Marketaux; see
+data/rag/news_sentiment.py) — and then applies a safety rule:
+
+    unvalidated news may only make the stance MORE cautious, never more optimistic.
+
+The operative stance is the more cautious of the two runs. Negative news can lower a stance
+toward CAUTION (flagged experimental). Positive news is shown as context but never raises the
+stance, and never softens a CAUTION — because the sentiment signal is not yet validated
+(docs/ai/SENTIMENT_ATTRIBUTION.md; P10 would earn the right to let news be optimistic).
 
 Nothing in `rule_based_engine.py` changes: sentiment flows in through its existing
-`sentiment_score` argument and concentration through `sector_weight`. Because the base engine
-only reaches EXPLORE with bullish sentiment, the baseline is conservative (never EXPLORE) and
-news can upgrade it to EXPLORE or downgrade it to CAUTION — which is exactly the "the forecast
-said X; incorporating recent news it becomes Y" story the explainer tells.
+`sentiment_score` argument and concentration through `sector_weight`.
 """
 from __future__ import annotations
 
@@ -61,6 +64,10 @@ def _echo(news_signal: Optional[dict[str, Any]], score: Optional[float]) -> dict
     }
 
 
+# Stance ordering by caution (higher = more cautious). Used to apply "news may only add caution".
+_CAUTION_RANK = {"EXPLORE": 0, "MONITOR": 1, "CAUTION": 2}
+
+
 def evaluate_signal(
     forecast_return: float,
     volatility: float,
@@ -70,11 +77,12 @@ def evaluate_signal(
     sector_weight: Optional[float] = None,
     forecast_lower_bound: Optional[float] = None,
 ) -> dict[str, Any]:
-    """Hybrid signal: the base engine's stance without news and with news.
+    """Hybrid signal where unvalidated news may only add caution.
 
-    Returns {baseline_stance, news_aware_stance, provisional, decision_trace, reason_codes,
-    news_signal, risk_profile}. `provisional` is True exactly when eligible recent news changed
-    the stance relative to the forecast-only baseline (treat as experimental).
+    Runs the base engine without news (baseline) and with news, then takes the MORE CAUTIOUS of
+    the two as the operative stance. Returns {baseline_stance, news_aware_stance, provisional,
+    decision_trace, reason_codes, news_signal, risk_profile}. `provisional` is True only when
+    news is what lowered the stance (an experimental, news-driven caution).
     """
     base = evaluate_stock_stance(
         forecast_return, volatility, sentiment_score=None,
@@ -100,18 +108,33 @@ def evaluate_signal(
         prediction_interval_width=prediction_interval_width, user_risk_profile=risk_profile,
         forecast_lower_bound=forecast_lower_bound, sector_weight=sector_weight,
     )
-    provisional = aware["stance"] != base["stance"]
-    trace = list(aware["decision_trace"])
-    if provisional:
+    source = news_signal.get("source")
+    count = int(news_signal.get("article_count", 0) or 0)
+
+    if _CAUTION_RANK[aware["stance"]] > _CAUTION_RANK[base["stance"]]:
+        # News makes it more cautious — the safe direction, so apply it (flagged experimental).
+        operative, provisional, trace = aware, True, list(aware["decision_trace"])
         trace.append(
-            f"News-driven change (experimental): incorporating recent {news_signal.get('source')} "
-            f"sentiment ({score:+.2f} over {int(news_signal.get('article_count', 0) or 0)} articles) "
-            f"changed the forecast-only stance from {base['stance']} to {aware['stance']}, pending "
-            f"validation against historical performance."
-        )
+            f"News-driven caution (experimental): recent {source} news is negative "
+            f"({score:+.2f} over {count} articles), lowering the forecast-only stance from "
+            f"{base['stance']} to {aware['stance']}, pending validation.")
+    else:
+        # News would raise or soften the stance — keep the conservative baseline; unvalidated
+        # positive sentiment is never used to upgrade, and never softens a CAUTION.
+        operative, provisional, trace = base, False, list(base["decision_trace"])
+        if score >= 0.15:
+            trace.append(
+                f"Recent {source} news is positive ({score:+.2f} over {count} articles), but the "
+                f"stance stays {base['stance']} — an unvalidated positive signal is not used to "
+                f"raise it.")
+        elif score <= -0.15:
+            trace.append(
+                f"Recent {source} news is also negative ({score:+.2f} over {count} articles), "
+                f"consistent with this {base['stance']} stance.")
+
     return {
-        "baseline_stance": base["stance"], "news_aware_stance": aware["stance"],
+        "baseline_stance": base["stance"], "news_aware_stance": operative["stance"],
         "provisional": provisional, "decision_trace": trace,
-        "reason_codes": list(aware.get("reason_codes", [])),
+        "reason_codes": list(operative.get("reason_codes", [])),
         "news_signal": _echo(news_signal, score), "risk_profile": profile_key,
     }
