@@ -47,9 +47,11 @@ def test_units_and_authenticated_profile_are_passed_to_engine(monkeypatch):
     result=asyncio.run(ForecastAssessmentService(profiles,Assets()).enrich(user,original))
     assert profiles.calls==[user]
     assert calls==[dict(forecast_return=2.5,volatility=.18,sentiment_score=None,
-                       prediction_interval_width=10,user_risk_profile='conservative')]
+                       prediction_interval_width=10,forecast_lower_bound=-2.5,
+                       user_risk_profile='conservative')]
     assert result.forecasts[0].stance=='MONITOR'
     assert result.forecasts[0].rule_inputs.forecast_return==2.5
+    assert result.forecasts[0].rule_inputs.forecast_lower_bound==-2.5
     assert original.forecasts[0].stance is None
 
 
@@ -62,6 +64,13 @@ def test_real_engine_cautions_for_risk_mismatch_and_preserves_missing_sentiment(
     assert any('Risk mismatch' in line for line in item.decision_trace)
     assert any('Sentiment is unavailable' in line for line in item.decision_trace)
     assert not any('defaulted to neutral' in line for line in item.decision_trace)
+
+
+def test_real_engine_records_when_interval_includes_a_loss():
+    item=asyncio.run(ForecastAssessmentService(Profiles(),Assets()).enrich(
+        uuid.uuid4(),snapshot())).forecasts[0]
+    assert item.stance=='MONITOR'
+    assert any('Forecast range includes a loss' in line for line in item.decision_trace)
 
 
 def test_missing_volatility_suppresses_stance_without_inventing_zero():

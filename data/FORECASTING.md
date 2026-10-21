@@ -434,9 +434,33 @@ and its required preprocessing/calibration are served.
 
 ## Rule-engine handoff on the dashboard
 
+### PostgreSQL deployment handoff
+
+The production default, when neither local forecast directory override is set,
+reads the latest complete forecast batch from the application PostgreSQL database.
+After generating and reviewing an offline export, import it manually from
+`backend/`:
+
+```bash
+python -m scripts.import_forecasts \
+  ../data/artifacts/forecasting/walkforward-xgboost-2026-09-18
+```
+
+The command requires the ordinary private `POSTGRES_*` configuration. It validates
+the matching `forecasts.csv` and `report.json`, creates the additive forecast
+tables when permitted, and inserts the batch and all ticker results in one
+transaction. Re-importing the identical files is a no-op; a conflicting batch is
+rejected. Previous batches remain for audit. No model is loaded and no provider
+data is downloaded. The newest `as_of`/generation batch supplies results to the
+recommended-forecast endpoint. Uploaded historical snapshots remain visibly stale.
+
+Do not commit database credentials or generated artifacts. Test schema work only
+against the disposable `stocksense_test` database; the manual import command is
+the explicit production write operation.
+
 The recommended-forecast endpoint now enriches each available prediction through
-`evaluate_stock_stance`. The adapter multiplies decimal return by 100, passes
-interval width in percentage points, and reads annual one-year volatility from
+`evaluate_stock_stance`. The adapter multiplies decimal return and the lower
+interval bound by 100, passes interval width in percentage points, and reads annual one-year volatility from
 the recommended asset's catalogue risk data. It uses the authenticated caller's
 saved risk level, never a browser-supplied risk tier. Twenty-session model
 volatility is not substituted for the engine's one-year volatility.
