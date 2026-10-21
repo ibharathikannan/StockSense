@@ -81,12 +81,12 @@ TEST_POSTGRES_PASSWORD=localdev pytest -q        # from backend/; also TEST_POST
 ### Experimental selected-stock forecasts
 
 The personal dashboard now includes recommendations and a forecast panel.
-Configure `FORECAST_MODEL_DIR` with a complete trusted local model-and-feature
-package to run saved XGBoost inference only for the signed-in user's recommended
-tickers. Retrain/refresh locally and upload a new package manually; production
-never trains, downloads prices or queries numeric SQL tables. The separate [research notebook](notebooks/forecasting_research.ipynb)
-documents experimental training and comparisons. Model artifacts must be
-provisioned separately; see [the inference setup](data/FORECASTING.md#saved-model-dashboard-inference-local-deployment-package).
+Production reads the latest complete offline forecast batch from PostgreSQL, so
+the rule engine and dashboard share the same monthly uploaded results. Retraining,
+feature refresh and prediction remain local/offline; production never trains or
+downloads prices. Explicit `FORECAST_MODEL_DIR` and `FORECAST_RESULTS_DIR` values
+remain local development overrides. See [the forecasting guide](data/FORECASTING.md)
+for the validated manual import command.
 
 The authenticated `/forecasts` page now uses the same recommendation-driven
 forecast panel as the dashboard; no ticker query parameter is needed. A legacy

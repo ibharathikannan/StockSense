@@ -72,7 +72,13 @@ def get_forecast_service(
             settings.forecast_model_dir,
         )
 
-    return ForecastService(ForecastRepository(settings.forecast_results_dir))
+    if settings.forecast_results_dir is not None:
+        return ForecastService(ForecastRepository(settings.forecast_results_dir))
+
+    from app.repositories.database_forecasts import DatabaseForecastRepository
+    from app.services.database_forecasts import DatabaseForecastService
+
+    return DatabaseForecastService(DatabaseForecastRepository(request.app.state.db))
 
 
 def get_forecast_assessment_service(

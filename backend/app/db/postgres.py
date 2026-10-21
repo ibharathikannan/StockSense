@@ -60,6 +60,41 @@ CREATE TABLE IF NOT EXISTS profiles (
     created_at       TIMESTAMPTZ NOT NULL,
     updated_at       TIMESTAMPTZ NOT NULL
 );
+
+-- Immutable offline forecast uploads. A batch and all of its ticker rows are
+-- inserted in one transaction so readers never observe a partial monthly run.
+CREATE TABLE IF NOT EXISTS forecast_batches (
+    id                         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    source_sha256              TEXT NOT NULL UNIQUE CHECK (source_sha256 ~ '^[0-9a-f]{64}$'),
+    model                      TEXT NOT NULL,
+    as_of                      DATE NOT NULL,
+    generated_at               TIMESTAMPTZ NOT NULL,
+    horizon_sessions           SMALLINT NOT NULL CHECK (horizon_sessions = 10),
+    nominal_coverage           DOUBLE PRECISION NOT NULL CHECK (nominal_coverage > 0 AND nominal_coverage < 1),
+    empirical_coverage         DOUBLE PRECISION CHECK (empirical_coverage >= 0 AND empirical_coverage <= 1),
+    evaluation_mae_pp          DOUBLE PRECISION CHECK (evaluation_mae_pp >= 0),
+    direction_accuracy_pct     DOUBLE PRECISION CHECK (direction_accuracy_pct >= 0 AND direction_accuracy_pct <= 100),
+    always_up_accuracy_pct     DOUBLE PRECISION CHECK (always_up_accuracy_pct >= 0 AND always_up_accuracy_pct <= 100),
+    calibration_latest_outcome DATE NOT NULL,
+    imported_at                TIMESTAMPTZ NOT NULL DEFAULT now(),
+    UNIQUE (model, generated_at)
+);
+
+CREATE TABLE IF NOT EXISTS forecast_results (
+    batch_id                    UUID NOT NULL REFERENCES forecast_batches (id) ON DELETE CASCADE,
+    ticker                      TEXT NOT NULL,
+    forecast_origin             DATE NOT NULL,
+    predicted_return_10d        DOUBLE PRECISION NOT NULL,
+    lower_return                DOUBLE PRECISION NOT NULL,
+    upper_return                DOUBLE PRECISION NOT NULL,
+    uncertainty_width_pp        DOUBLE PRECISION NOT NULL CHECK (uncertainty_width_pp >= 0),
+    PRIMARY KEY (batch_id, ticker),
+    CHECK (lower_return <= predicted_return_10d AND predicted_return_10d <= upper_return)
+);
+CREATE INDEX IF NOT EXISTS forecast_batches_latest_idx
+    ON forecast_batches (as_of DESC, generated_at DESC);
+CREATE INDEX IF NOT EXISTS forecast_results_ticker_idx
+    ON forecast_results (ticker, batch_id);
 """
 
 # Arbitrary constant: serialises schema creation when several processes start at once

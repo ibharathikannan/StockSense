@@ -47,6 +47,7 @@ class ForecastAssessmentService:
             item.rule_inputs = RuleInputs(
                 forecast_return=item.predicted_return_10d*100,
                 prediction_interval_width=item.uncertainty_width_pp,
+                forecast_lower_bound=item.lower_return*100,
                 volatility=volatility,volatility_as_of=volatility_as_of,
                 sentiment_score=None,user_risk_profile=risk_level if valid_risk else None)
             if volatility is None or not valid_risk:
@@ -58,6 +59,7 @@ class ForecastAssessmentService:
                 forecast_return=item.rule_inputs.forecast_return,
                 volatility=volatility,sentiment_score=None,
                 prediction_interval_width=item.rule_inputs.prediction_interval_width,
+                forecast_lower_bound=item.rule_inputs.forecast_lower_bound,
                 user_risk_profile=risk_level)
             item.stance=decision['stance']
             item.decision_trace=list(decision['decision_trace'])

@@ -1,5 +1,16 @@
 # AI work plan
 
+## Database forecast handoff — 2026-10-21
+
+The user authorized uploading the reviewed offline `forecasts.csv` output to the
+application PostgreSQL database so the deployed rule engine can access it without
+Git-tracked model artifacts. Add immutable batch/result tables, a manual validated
+import command, and a database-backed default forecast service. Preserve explicit
+local CSV and saved-model overrides for development. Training, provider downloads,
+automatic scheduling, model promotion, public upload endpoints, commits, pushes and
+deployment remain outside this change. The current September 18 snapshot stays
+historical/stale in product output.
+
 ## Authorized rule-engine handoff
 
 The user requested automatic forecasting-to-rule-engine integration. The

@@ -10,6 +10,7 @@ class RuleInputs(BaseModel):
     model_config = ConfigDict(extra="forbid")
     forecast_return: FiniteFloat
     prediction_interval_width: FiniteFloat = Field(ge=0)
+    forecast_lower_bound: FiniteFloat | None = None
     volatility: FiniteFloat | None = Field(default=None, ge=0)
     volatility_as_of: date | None = None
     sentiment_score: FiniteFloat | None = Field(default=None, ge=-1, le=1)
