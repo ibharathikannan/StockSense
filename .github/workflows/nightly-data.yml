@@ -10,8 +10,10 @@ name: Nightly data refresh
 # Required repository secrets (Settings -> Secrets and variables -> Actions):
 #   MARKETAUX_SECRET_KEY  - Marketaux API token
 #   PG_PASSWORD           - password for the Postgres user (same server for app + research data)
-#   AZURE_CREDENTIALS     - service-principal JSON: {"clientId","clientSecret","subscriptionId","tenantId"}
-#                           The SP needs permission to manage the Postgres server's firewall rules.
+#   AZURE_CLIENT_ID       - service-principal app (client) id          } plain single-line values,
+#   AZURE_CLIENT_SECRET   - service-principal secret                   } no JSON. The SP needs
+#   AZURE_TENANT_ID       - directory (tenant) id                      } permission to manage the
+#   AZURE_SUBSCRIPTION_ID - subscription id                            } Postgres firewall rules.
 #
 # The Azure Postgres firewall is opened for this runner's IP for the duration of the run and
 # removed afterwards (runner IPs are dynamic and "allow Azure services" does not cover GitHub).
@@ -64,10 +66,20 @@ jobs:
           .venv-backend/bin/pip install --upgrade pip
           .venv-backend/bin/pip install -r backend/requirements.txt
 
-      - name: Azure login
-        uses: azure/login@v2
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - name: Azure login (service principal)
+        env:
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+        run: |
+          # az CLI is preinstalled on ubuntu-latest. Plain-value secrets, no JSON to misformat.
+          az login --service-principal \
+            --username "$AZURE_CLIENT_ID" \
+            --password "$AZURE_CLIENT_SECRET" \
+            --tenant "$AZURE_TENANT_ID" \
+            --output none
+          az account set --subscription "$AZURE_SUBSCRIPTION_ID"
 
       - name: Open Postgres firewall for this runner
         run: |
