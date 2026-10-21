@@ -96,3 +96,58 @@ def test_base_engine_still_available_with_reason_codes():
                                 user_risk_profile="moderate")
     assert res["stance"] == "EXPLORE"
     assert "reason_codes" in res and "decision_trace" in res
+
+
+# --- SEC fundamentals (both directions, one step, never lifts CAUTION) ---------------
+
+def _fund(rating, *, score=None, metrics=5, age=30, source="sec_xbrl"):
+    score = {"strong": 0.8, "neutral": 0.0, "weak": -0.8}[rating] if score is None else score
+    names = ["revenue_growth", "operating_margin", "free_cash_flow_margin", "current_ratio",
+             "debt_to_equity"][:metrics]
+    return {"score": score, "rating": rating, "metric_count": metrics, "age_days": age,
+            "source": source, "period_end": "2025-12-31", "filed": "2026-02-15",
+            "metrics": {n: {"value": 0.0, "assessment": rating} for n in names}}
+
+
+def test_strong_fundamentals_raise_monitor_to_explore_provisionally():
+    s = evaluate_signal(4.0, 0.18, prediction_interval_width=3.0, fundamentals_signal=_fund("strong"))
+    assert s["baseline_stance"] == "MONITOR"
+    assert s["news_aware_stance"] == "EXPLORE" and s["provisional"] is True
+    assert "FUNDAMENTALS_STRONG" in s["reason_codes"]
+    assert any("Fundamentals-driven upgrade" in t for t in s["decision_trace"])
+    assert s["fundamentals_signal"]["rating"] == "strong"
+
+
+def test_weak_fundamentals_lower_one_step():
+    s = evaluate_signal(4.0, 0.18, prediction_interval_width=3.0, fundamentals_signal=_fund("weak"))
+    assert s["news_aware_stance"] == "CAUTION" and s["provisional"] is True
+    assert "FUNDAMENTALS_WEAK" in s["reason_codes"]
+
+
+def test_strong_fundamentals_never_lift_caution():
+    s = evaluate_signal(-1.2, 0.12, prediction_interval_width=3.0, fundamentals_signal=_fund("strong"))
+    assert s["news_aware_stance"] == "CAUTION" and s["provisional"] is False
+    s = evaluate_signal(3.0, 0.3815, prediction_interval_width=4.5, risk_profile="conservative",
+                        fundamentals_signal=_fund("strong"))
+    assert s["news_aware_stance"] == "CAUTION"
+
+
+def test_strong_fundamentals_do_not_undo_news_caution_or_override_caps():
+    s = evaluate_signal(4.0, 0.18, prediction_interval_width=3.0, news_signal=_news(-0.3),
+                        fundamentals_signal=_fund("strong"))
+    assert s["news_aware_stance"] == "CAUTION" and "FUNDAMENTALS_STRONG" not in s["reason_codes"]
+    s = evaluate_signal(4.0, 0.18, prediction_interval_width=3.0, sector_weight=0.5,
+                        fundamentals_signal=_fund("strong"))
+    assert s["news_aware_stance"] == "MONITOR" and s["provisional"] is False
+    s = evaluate_signal(4.0, 0.18, fundamentals_signal=_fund("strong"))   # no forecast interval
+    assert s["news_aware_stance"] == "MONITOR" and s["provisional"] is False
+    assert any("missing forecast blocks an upgrade" in t for t in s["decision_trace"])
+
+
+def test_neutral_or_unusable_fundamentals_do_not_move_the_stance():
+    for signal in (_fund("neutral"), _fund("strong", metrics=2), _fund("strong", age=900),
+                   _fund("strong", source="other"), _fund("strong", score=float("nan")), None):
+        s = evaluate_signal(4.0, 0.18, prediction_interval_width=3.0, fundamentals_signal=signal)
+        assert s["news_aware_stance"] == "MONITOR" and s["provisional"] is False
+    assert s["fundamentals_signal"]["score"] is None
+    assert any("Fundamentals check abstained" in t for t in s["decision_trace"])

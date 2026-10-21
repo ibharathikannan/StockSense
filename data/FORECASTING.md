@@ -453,6 +453,9 @@ transaction. Re-importing the identical files is a no-op; a conflicting batch is
 rejected. Previous batches remain for audit. No model is loaded and no provider
 data is downloaded. The newest `as_of`/generation batch supplies results to the
 recommended-forecast endpoint. Uploaded historical snapshots remain visibly stale.
+Snapshot assembly (`data/rag/assemble_snapshots.py`, run nightly) reads the same
+newest batch when neither `--forecasts` nor `FORECAST_RESULTS_DIR` is set, so the
+Discover stances and the forecast panel describe one batch.
 
 Do not commit database credentials or generated artifacts. Test schema work only
 against the disposable `stocksense_test` database; the manual import command is

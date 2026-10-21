@@ -63,7 +63,7 @@ export default function DiscoverPage() {
 
       <p className="mt-8 text-xs text-muted">
         Signals guide research priority (Explore / Monitor / Caution), not trading decisions.
-        A <span className="font-semibold">*</span> marks an experimental, news-driven change of stance.
+        A <span className="font-semibold">*</span> marks an experimental change of stance driven by news or SEC fundamentals.
       </p>
     </>
   );

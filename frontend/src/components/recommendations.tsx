@@ -19,7 +19,7 @@ const STANCE: Record<Stance, { tone: "green" | "amber" | "red"; label: string; b
   CAUTION: { tone: "red", label: "Caution", blurb: "Higher risk — research carefully" },
 };
 
-/** The research signal pill. A trailing * marks a provisional (experimental) news-driven stance. */
+/** The research signal pill. A trailing * marks a provisional (experimental) news- or fundamentals-driven stance. */
 export function StanceBadge({ stance, provisional }: { stance: Stance; provisional?: boolean }) {
   const meta = STANCE[stance];
   return (
