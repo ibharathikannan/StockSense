@@ -1,6 +1,6 @@
 "use client";
 
-import { SlidersHorizontal } from "lucide-react";
+import { Compass, SlidersHorizontal } from "lucide-react";
 import { ForecastPanel } from "@/components/dashboard/ForecastPanel";
 import { DashboardTiles } from "@/components/dashboard/DashboardTiles";
 import { RiskCheckChart } from "@/components/dashboard/RiskCheckChart";
@@ -36,6 +36,19 @@ export default function DashboardPage() {
   return (
     <>
       <Header firstName={firstName} data={dashboard.data} />
+
+      <Card className="mb-6 flex flex-wrap items-center justify-between gap-4 bg-brand-50 p-6">
+        <div className="flex items-start gap-3">
+          <Compass className="mt-0.5 size-6 text-brand-600" aria-hidden />
+          <div>
+            <h2 className="font-semibold">Your research set is ready</h2>
+            <p className="mt-1 text-sm text-muted">
+              Explore personalised, explainable signals — Explore / Monitor / Caution — with the reasons behind each.
+            </p>
+          </div>
+        </div>
+        <LinkButton href="/discover">Go to Discover</LinkButton>
+      </Card>
 
       {dashboard.error ? (
         dashboard.error.status === 409 ? (

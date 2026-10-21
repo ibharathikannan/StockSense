@@ -1,0 +1,142 @@
+name: Nightly data refresh
+
+# Runs the offline StockSense pipeline (collect Marketaux news -> embed evidence ->
+# assemble snapshots -> load into the app DB) on a schedule. This does NOT touch the web
+# App Service; it only refreshes the data the App Service serves. See docs/ai/OPERATIONAL_MODEL.md.
+#
+# IMPORTANT: GitHub only runs scheduled workflows from the DEFAULT branch, so this file must be
+# on `main` to fire. It also needs the repository secrets listed under "env" below.
+#
+# Required repository secrets (Settings -> Secrets and variables -> Actions):
+#   MARKETAUX_SECRET_KEY  - Marketaux API token
+#   PG_PASSWORD           - password for the Postgres user (same server for app + research data)
+#   AZURE_CLIENT_ID       - service-principal app (client) id          } plain single-line values,
+#   AZURE_CLIENT_SECRET   - service-principal secret                   } no JSON. The SP needs
+#   AZURE_TENANT_ID       - directory (tenant) id                      } permission to manage the
+#   AZURE_SUBSCRIPTION_ID - subscription id                            } Postgres firewall rules.
+#
+# The Azure Postgres firewall is opened for this runner's IP for the duration of the run and
+# removed afterwards (runner IPs are dynamic and "allow Azure services" does not cover GitHub).
+
+on:
+  schedule:
+    - cron: "0 1 * * *"   # 01:00 UTC nightly (~9pm US Eastern), after US market close
+  workflow_dispatch: {}    # allow manual runs from the Actions tab
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nightly-data
+  cancel-in-progress: false
+
+env:
+  # Non-secret connection details (one Azure Postgres Flexible Server hosts both the app tables
+  # and the research schema, in database stocksense_data). Adjust if your resource names differ.
+  PG_SERVER_NAME: stocksensedb
+  PG_RESOURCE_GROUP: Stocksense
+  PG_HOST: stocksensedb.postgres.database.azure.com
+  PG_DATABASE: stocksense_data
+  PG_USER: postgres
+  PG_PORT: "5432"
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install pipeline dependencies
+        run: |
+          # Two separate venvs, mirroring the local setup: the data stack and the backend
+          # loader pin different numpy versions (2.5.2 vs 2.3.5, the latter aligned with the
+          # XGBoost model), so they cannot share one environment.
+          python -m venv .venv-data
+          .venv-data/bin/pip install --upgrade pip
+          .venv-data/bin/pip install -r data/requirements-rag.txt
+          python -m venv .venv-backend
+          .venv-backend/bin/pip install --upgrade pip
+          .venv-backend/bin/pip install -r backend/requirements.txt
+
+      - name: Azure login (service principal)
+        env:
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_CLIENT_SECRET: ${{ secrets.AZURE_CLIENT_SECRET }}
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+        run: |
+          # az CLI is preinstalled on ubuntu-latest. The SP has no subscription-level role, so
+          # allow login without a subscription list and pass --subscription to later commands.
+          az login --service-principal \
+            --username "$AZURE_CLIENT_ID" \
+            --password "$AZURE_CLIENT_SECRET" \
+            --tenant "$AZURE_TENANT_ID" \
+            --allow-no-subscriptions \
+            --output none
+          echo "AZ_SUB=$AZURE_SUBSCRIPTION_ID" >> "$GITHUB_ENV"
+
+      - name: Open Postgres firewall for this runner
+        run: |
+          RUNNER_IP="$(curl -fsS https://api.ipify.org)"
+          echo "runner ip: $RUNNER_IP"
+          echo "RULE_NAME=gha-nightly-${{ github.run_id }}" >> "$GITHUB_ENV"
+          az postgres flexible-server firewall-rule create \
+            --subscription "$AZ_SUB" \
+            --resource-group "$PG_RESOURCE_GROUP" --server-name "$PG_SERVER_NAME" \
+            --name "gha-nightly-${{ github.run_id }}" \
+            --start-ip-address "$RUNNER_IP" --end-ip-address "$RUNNER_IP"
+          # Give Azure a moment to apply the rule before the pipeline connects.
+          sleep 20
+
+      - name: Write environment files from secrets
+        run: |
+          cat > data/.env <<ENV
+          MARKETAUX_SECRET_KEY=${{ secrets.MARKETAUX_SECRET_KEY }}
+          PGHOST=${PG_HOST}
+          PGPORT=${PG_PORT}
+          PGDATABASE=${PG_DATABASE}
+          PGUSER=${PG_USER}
+          PGPASSWORD=${{ secrets.PG_PASSWORD }}
+          PGSSLMODE=require
+          ENV
+          cat > backend/.env <<ENV
+          ENVIRONMENT=development
+          # Required by Settings (min 32 chars) but unused by the loader, which only connects
+          # to the DB. Not a sample-prefixed value, and ENVIRONMENT is development anyway.
+          JWT_SECRET_KEY=ci-snapshot-loader-placeholder-not-used-for-tokens-0123456789
+          POSTGRES_HOST=${PG_HOST}
+          POSTGRES_PORT=${PG_PORT}
+          POSTGRES_DB=${PG_DATABASE}
+          POSTGRES_USER=${PG_USER}
+          POSTGRES_PASSWORD=${{ secrets.PG_PASSWORD }}
+          POSTGRES_SSLMODE=require
+          ENV
+
+      - name: Run nightly refresh
+        env:
+          DATA_PY: ${{ github.workspace }}/.venv-data/bin/python       # data stack (torch, numpy 2.5.2)
+          BACKEND_PY: ${{ github.workspace }}/.venv-backend/bin/python  # loader (asyncpg, numpy 2.3.5)
+          DATA_ENV_FILE: data/.env
+          # FORECAST_RESULTS_DIR: set this (to a checked-out/mounted forecasts.csv dir) once the
+          # XGBoost results are provisioned; until then snapshots use the forecast-pending fallback.
+        run: bash data/run_nightly.sh
+
+      - name: Remove Postgres firewall rule
+        if: always()
+        run: |
+          az postgres flexible-server firewall-rule delete \
+            --subscription "$AZ_SUB" \
+            --resource-group "$PG_RESOURCE_GROUP" --server-name "$PG_SERVER_NAME" \
+            --name "${RULE_NAME:-gha-nightly-${{ github.run_id }}}" --yes || true
+
+      - name: Clean up environment files
+        if: always()
+        run: rm -f data/.env backend/.env

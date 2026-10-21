@@ -22,3 +22,7 @@ data/artifacts/
 data/raw/*.csv
 data/raw/manual_macro/*.csv
 data/processed/*.csv
+
+# nightly refresh runtime lock (data/run_nightly.sh)
+data/.nightly.lock
+data/.nightly.lock.d/
