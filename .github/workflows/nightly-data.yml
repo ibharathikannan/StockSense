@@ -109,6 +109,9 @@ jobs:
           ENV
           cat > backend/.env <<ENV
           ENVIRONMENT=development
+          # Required by Settings (min 32 chars) but unused by the loader, which only connects
+          # to the DB. Not a sample-prefixed value, and ENVIRONMENT is development anyway.
+          JWT_SECRET_KEY=ci-snapshot-loader-placeholder-not-used-for-tokens-0123456789
           POSTGRES_HOST=${PG_HOST}
           POSTGRES_PORT=${PG_PORT}
           POSTGRES_DB=${PG_DATABASE}
