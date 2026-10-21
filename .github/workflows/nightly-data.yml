@@ -73,13 +73,15 @@ jobs:
           AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
           AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
         run: |
-          # az CLI is preinstalled on ubuntu-latest. Plain-value secrets, no JSON to misformat.
+          # az CLI is preinstalled on ubuntu-latest. The SP has no subscription-level role, so
+          # allow login without a subscription list and pass --subscription to later commands.
           az login --service-principal \
             --username "$AZURE_CLIENT_ID" \
             --password "$AZURE_CLIENT_SECRET" \
             --tenant "$AZURE_TENANT_ID" \
+            --allow-no-subscriptions \
             --output none
-          az account set --subscription "$AZURE_SUBSCRIPTION_ID"
+          echo "AZ_SUB=$AZURE_SUBSCRIPTION_ID" >> "$GITHUB_ENV"
 
       - name: Open Postgres firewall for this runner
         run: |
@@ -87,6 +89,7 @@ jobs:
           echo "runner ip: $RUNNER_IP"
           echo "RULE_NAME=gha-nightly-${{ github.run_id }}" >> "$GITHUB_ENV"
           az postgres flexible-server firewall-rule create \
+            --subscription "$AZ_SUB" \
             --resource-group "$PG_RESOURCE_GROUP" --name "$PG_SERVER_NAME" \
             --rule-name "gha-nightly-${{ github.run_id }}" \
             --start-ip-address "$RUNNER_IP" --end-ip-address "$RUNNER_IP"
@@ -125,6 +128,7 @@ jobs:
         if: always()
         run: |
           az postgres flexible-server firewall-rule delete \
+            --subscription "$AZ_SUB" \
             --resource-group "$PG_RESOURCE_GROUP" --name "$PG_SERVER_NAME" \
             --rule-name "${RULE_NAME:-gha-nightly-${{ github.run_id }}}" --yes || true
 
