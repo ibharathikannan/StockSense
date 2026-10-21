@@ -91,7 +91,7 @@ jobs:
           az postgres flexible-server firewall-rule create \
             --subscription "$AZ_SUB" \
             --resource-group "$PG_RESOURCE_GROUP" --server-name "$PG_SERVER_NAME" \
-            --rule-name "gha-nightly-${{ github.run_id }}" \
+            --name "gha-nightly-${{ github.run_id }}" \
             --start-ip-address "$RUNNER_IP" --end-ip-address "$RUNNER_IP"
 
       - name: Write environment files from secrets
@@ -130,7 +130,7 @@ jobs:
           az postgres flexible-server firewall-rule delete \
             --subscription "$AZ_SUB" \
             --resource-group "$PG_RESOURCE_GROUP" --server-name "$PG_SERVER_NAME" \
-            --rule-name "${RULE_NAME:-gha-nightly-${{ github.run_id }}}" --yes || true
+            --name "${RULE_NAME:-gha-nightly-${{ github.run_id }}}" --yes || true
 
       - name: Clean up environment files
         if: always()
