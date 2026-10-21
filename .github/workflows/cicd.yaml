@@ -17,17 +17,17 @@ jobs:
     - name: Azure Container Registry Login
       uses: azure/docker-login@v1
       with:
-        login-server: stocksense.azurecr.io
+        login-server: stocksenseacr.azurecr.io
         username: ${{ secrets.ACR_USERNAME }}
         password: ${{ secrets.ACR_PASSWORD }}
 
     # 3. Build the Docker Image and push it to your registry
     - name: Build and Push Docker Image
       run: |
-        docker build -t stocksense.azurecr.io/stocksense:latest .
-        docker push stocksense.azurecr.io/stocksense:latest
+        docker build -t stocksenseacr.azurecr.io/stocksense:latest .
+        docker push stocksenseacr.azurecr.io/stocksense:latest
 
-    # NOTE: Continuous Deployment is enabled for the stocksense-app Web App through an
-    # ACR webhook (registry stocksense, webhook "stocksenseapp", fires on push of
-    # stocksense:latest). Every push above therefore restarts the Web App on the new
-    # image automatically -- no extra GitHub secrets needed.
+    # NOTE: Continuous Deployment is enabled for the Web App through an
+    # ACR webhook (registry stocksenseacr, fires on push of stocksense:latest).
+    # Every push above therefore restarts the Web App on the new image automatically
+    # -- no extra GitHub secrets needed.
