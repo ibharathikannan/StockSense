@@ -62,6 +62,31 @@ only ever allowed to add caution. The baseline (no news) already needs bullish s
 EXPLORE, so in practice today's stances are MONITOR or CAUTION; letting news earn EXPLORE is a P10
 decision, once validation justifies trusting positive sentiment.
 
+## How SEC fundamentals move the stance
+
+After the news step, `evaluate_signal` applies an optional point-in-time SEC fundamentals signal
+(`data/rag/fundamentals_signal.py`, from XBRL facts collected by
+`data/collect_sec_fundamentals.py`). Unlike news, the user authorized fundamentals to move the
+stance in **both directions**, one step at most:
+
+| Fundamentals rating | Effect on the stance |
+| --- | --- |
+| weak (score ≤ −0.4) | one step **more cautious**: EXPLORE → MONITOR, MONITOR → CAUTION (provisional) |
+| strong (score ≥ +0.6) | may raise **MONITOR → EXPLORE** (provisional) |
+| neutral | no change |
+| abstain (ETF, < 3 metrics, latest fiscal year > ~15 months old, filed after as-of) | no change |
+
+Strong fundamentals never lift a CAUTION (negative forecast, volatility above the risk profile,
+or news-driven caution), never upgrade when the forecast interval is missing (the "forecast
+pending" MONITOR cap is kept), and never upgrade under sector concentration. Metrics are revenue
+growth, operating margin, free-cash-flow margin, current ratio and long-term debt-to-equity, each
+strong/neutral/weak on fixed, sector-agnostic thresholds; the score is their mean. Only facts
+filed on or before the snapshot's as-of date are used, and later restatements never apply
+backwards. These thresholds are **unvalidated**, so every stance they change is provisional and
+the `*` marker covers both news- and fundamentals-driven changes. Because most current forecasts
+are neutralised to 0 by the confidence gate, strong fundamentals are in practice the main route
+to EXPLORE; validating them against later outcomes is outstanding.
+
 ## What the dashboard shows (confirmed)
 
 - **The news-aware stance is the primary signal**, but news can only add caution — it never

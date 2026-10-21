@@ -112,12 +112,30 @@ export interface NewsSignal {
   article_count: number;
 }
 
+export interface FundamentalMetric {
+  value: number;
+  assessment: "strong" | "neutral" | "weak";
+}
+
+/** Point-in-time SEC XBRL fundamentals; score/rating are null when the check abstained. */
+export interface FundamentalsSignal {
+  score: number | null;
+  rating: "strong" | "neutral" | "weak" | null;
+  metrics: Record<string, FundamentalMetric>;
+  metric_count: number;
+  period_end: string | null;
+  filed: string | null;
+  age_days: number | null;
+  source: string | null;
+}
+
 export interface Signal {
   baseline_stance: Stance;
   news_aware_stance: Stance;
   provisional: boolean;
   decision_trace: string[];
   news_signal: NewsSignal;
+  fundamentals_signal: FundamentalsSignal;
   risk_profile: string;
 }
 

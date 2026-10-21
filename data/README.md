@@ -227,6 +227,46 @@ Use `--tickers AAPL,MSFT`, `--as-of 2026-10-02T00:00:00Z`, or
 `--output-dir data/artifacts/sec-pilot` for bounded runs. Requests are throttled
 to two per second, with retries for transient failures.
 
+### Collect SEC fundamentals (XBRL)
+
+```bash
+python3 -m data.collect_sec_fundamentals --tickers AAPL,MSFT   # pilot
+python3 -m data.collect_sec_fundamentals
+```
+
+Uses the same `SEC_USER_AGENT`, throttling and retries as the filing collector,
+and reads SEC company facts for stocks only. `data/artifacts/sec_fundamentals/`
+holds `facts.jsonl` (one record per reported USD value of the concepts used by
+`data/rag/fundamentals_signal.py`, with period, form, filing date and accession),
+per-ticker `coverage.json` and cached raw responses.
+
+Alternatively, without `SEC_USER_AGENT`, download SEC's quarterly *Financial
+Statement Data Sets* zips (`YYYYqN.zip`) and `company_tickers.json` in a browser:
+
+```bash
+python -m data.import_sec_financial_statements \
+  --zips-dir ~/Downloads --tickers-json ~/Downloads/company_tickers.json
+```
+
+Zips are read in place, never extracted, and only our stocks' 10-K/10-Q values
+for the needed us-gaap concepts (USD, consolidated, annual or point-in-time) are
+kept, in the same `facts.jsonl` format. `coverage.json` lists unmatched tickers
+and missing quarters. 2020q1–2026q3 yields about 24,000 facts; 73 of 80 stocks
+receive a signal. Foreign filers (TSM, ASML, CCJ) and banks (JPM, BAC, GS, MS)
+abstain. Exxon's filings are under its earlier CIK (`CIK_ALIASES`).
+
+Load the cleaned facts into the shared-data database, beside the snapshot tables:
+
+```bash
+python -m data.rag.load_sec_fundamentals --env-file data/.env
+```
+
+This replaces the additive `sec_fundamental_facts` table's contents in one
+transaction; snapshot tables are not modified. Snapshot assembly reads that
+table by default, or a local file with `--fundamentals`; with neither, the
+fundamentals check abstains. See `docs/ai/OPERATIONAL_MODEL.md` for how the
+signal moves the stance.
+
 ### Collect recent news
 
 ```bash

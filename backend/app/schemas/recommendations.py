@@ -39,12 +39,34 @@ class NewsSignal(BaseModel):
     article_count: int = 0
 
 
+class FundamentalMetric(BaseModel):
+    value: float
+    assessment: Literal["strong", "neutral", "weak"]
+
+
+class FundamentalsSignal(BaseModel):
+    """Point-in-time SEC XBRL fundamentals input (data/rag/fundamentals_signal.py).
+
+    Thresholds are unvalidated, so any stance change they cause is marked provisional.
+    `score`/`rating` are None when the check abstained (ETF, missing or stale filings).
+    """
+
+    score: float | None = None
+    rating: Literal["strong", "neutral", "weak"] | None = None
+    metrics: dict[str, FundamentalMetric] = Field(default_factory=dict)
+    metric_count: int = 0
+    period_end: date | None = None
+    filed: date | None = None
+    age_days: int | None = None
+    source: str | None = None          # "sec_xbrl" | None
+
+
 class Signal(BaseModel):
     """The hybrid signal in both modes.
 
-    `baseline_stance` ignores news; `news_aware_stance` applies the relevance/recency-
-    gated MONITOR* override. `provisional` is True exactly when the news-aware stance is a
-    MONITOR* override (experimental, surfaced as unvalidated). The final stance a user
+    `baseline_stance` ignores news and fundamentals; `news_aware_stance` is the operative
+    stance after the gated news and SEC-fundamentals adjustments. `provisional` is True when
+    either adjustment changed the stance (experimental, surfaced as unvalidated). The final stance a user
     sees may be further downgraded by the request-time concentration adjustment, which
     appends to `decision_trace`.
     """
@@ -54,6 +76,7 @@ class Signal(BaseModel):
     provisional: bool = False
     decision_trace: list[str] = Field(default_factory=list)
     news_signal: NewsSignal = Field(default_factory=NewsSignal)
+    fundamentals_signal: FundamentalsSignal = Field(default_factory=FundamentalsSignal)
     risk_profile: str
 
 
@@ -145,6 +168,7 @@ class RecommendationSnapshot(BaseModel):
                 provisional=row.get("provisional", False),
                 decision_trace=detail.get("decision_trace", []),
                 news_signal=NewsSignal(**(detail.get("news_signal") or {})),
+                fundamentals_signal=FundamentalsSignal(**(detail.get("fundamentals_signal") or {})),
                 risk_profile=row["risk_profile"],
             ),
             evidence=[Evidence(**e) for e in (row.get("evidence") or [])],

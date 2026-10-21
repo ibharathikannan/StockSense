@@ -94,3 +94,52 @@ def test_tiny_forecast_within_noise_band_is_neutral(tmp_path):
     snap = build_snapshot(PROFILE, "moderate", None, EVIDENCE, fc["AAPL"], AS_OF)
     assert snap["signal"]["news_aware_stance"] == "MONITOR"
     assert any("treated as neutral" in t for t in snap["signal"]["decision_trace"])
+
+
+def test_fundamentals_flow_into_snapshot_signal():
+    strong = {"score": 0.8, "rating": "strong", "metric_count": 5, "age_days": 30,
+              "source": "sec_xbrl", "period_end": "2025-12-31", "filed": "2026-02-15",
+              "metrics": {"operating_margin": {"value": 0.3, "assessment": "strong"}}}
+    forecast = {**placeholder_forecast("AAPL"), "return_10d": 3.0, "lower": 1.0, "upper": 5.0}
+    snap = build_snapshot(PROFILE, "moderate", None, EVIDENCE, forecast, AS_OF,
+                          fundamentals_signal=strong)
+    assert snap["signal"]["fundamentals_signal"]["rating"] == "strong"
+    assert snap["signal"]["news_aware_stance"] == "EXPLORE" and snap["signal"]["provisional"] is True
+    # EXPLORE still requires a real forecast: the placeholder keeps the MONITOR cap.
+    pending = build_snapshot(PROFILE, "moderate", None, EVIDENCE, placeholder_forecast("AAPL"), AS_OF,
+                             fundamentals_signal=strong)
+    assert pending["signal"]["news_aware_stance"] == "MONITOR"
+    absent = build_snapshot(PROFILE, "moderate", None, EVIDENCE, placeholder_forecast("AAPL"), AS_OF)
+    assert absent["signal"]["fundamentals_signal"]["score"] is None
+
+
+class _Cursor:
+    def __init__(self, results, sql): self.results, self.sql = results, sql
+    def __enter__(self): return self
+    def __exit__(self, *exc): return False
+    def execute(self, sql, params=None): self.sql.append((" ".join(sql.split()), params))
+    def fetchone(self): return self.results.pop(0)
+    def fetchall(self): return self.results.pop(0)
+
+
+class _Conn:
+    def __init__(self, *results): self.results, self.sql = list(results), []
+    def cursor(self): return _Cursor(self.results, self.sql)
+
+
+def test_db_forecasts_use_newest_batch_in_percent_units():
+    from data.rag.assemble_snapshots import load_forecasts_from_db
+    conn = _Conn(("forecast_batches", "forecast_results"), ("batch-1", "XGBoost grid=3"),
+                 [(" aapl ", 0.0125, -0.05, 0.075)])
+    forecasts = load_forecasts_from_db(conn)
+    assert forecasts["AAPL"]["return_10d"] == 1.25
+    assert forecasts["AAPL"]["lower"] == -5.0 and forecasts["AAPL"]["upper"] == 7.5
+    assert forecasts["AAPL"]["model_version"] == "XGBoost grid=3"
+    assert "ORDER BY as_of DESC, generated_at DESC" in conn.sql[1][0]
+    assert conn.sql[2][1] == ("batch-1",)
+
+
+def test_db_forecasts_absent_without_tables_or_batches():
+    from data.rag.assemble_snapshots import load_forecasts_from_db
+    assert load_forecasts_from_db(_Conn((None, None))) == {}
+    assert load_forecasts_from_db(_Conn(("forecast_batches", "forecast_results"), None)) == {}

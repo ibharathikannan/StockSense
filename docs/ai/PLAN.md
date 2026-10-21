@@ -1,5 +1,25 @@
 # AI work plan
 
+## SEC fundamentals in the hybrid engine — 2026-10-21
+
+The user authorized adding point-in-time SEC XBRL fundamentals to the hybrid engine,
+moving the stance in both directions (one step; never lifting CAUTION, never upgrading
+without a forecast interval or under sector concentration; always provisional), wired
+through snapshot assembly, loading, API schema and frontend types. Filing-text sentiment
+and filing red-flag events are not included. No snapshot run against the shared
+database, threshold validation, commit, push or deployment is part of this change.
+
+The user then supplied SEC Financial Statement Data Sets (2020q1–2026q3) and
+authorized creating the additive `sec_fundamental_facts` table in the shared-data
+snapshot schema. On 2026-10-21, 24,466 cleaned facts for 77 stocks were loaded and
+read back identical to the local file. Snapshot assembly was not rerun.
+The user also authorized importing a forecast batch with `main`'s
+`scripts.import_forecasts`: the documented `walkforward-xgboost-2026-09-18` export
+(87 tickers, as of 2026-09-18) was imported into `stocksense_data` on 2026-10-21.
+Snapshot assembly now reads the newest imported batch when no local forecast
+export is configured. The user chose a fundamentals "strong" cut-off of 0.6
+(previewed: 29 EXPLORE* stances across 14 tickers, 4 CAUTION*).
+
 ## Database forecast handoff — 2026-10-21
 
 The user authorized uploading the reviewed offline `forecasts.csv` output to the

@@ -35,7 +35,8 @@ def _snapshot_row(snap: dict) -> dict:
         "news_aware_stance": sig["news_aware_stance"],
         "provisional": sig["provisional"],
         "forecast": snap["forecast"],
-        "signal_detail": {"decision_trace": sig["decision_trace"], "news_signal": sig["news_signal"]},
+        "signal_detail": {"decision_trace": sig["decision_trace"], "news_signal": sig["news_signal"],
+                          "fundamentals_signal": sig.get("fundamentals_signal")},
         "evidence": snap["evidence"],
         "explanation": snap["explanation"],
     }

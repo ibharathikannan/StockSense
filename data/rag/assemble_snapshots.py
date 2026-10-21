@@ -26,6 +26,9 @@ from pathlib import Path
 
 try:
     from data.rag.news_sentiment import records_from_documents, build_news_signals, AggregationConfig
+    from data.rag.fundamentals_signal import build_fundamentals_signals
+    from data.rag.load_sec_fundamentals import fetch as fetch_fundamentals
+    from data.rag.build_embeddings import DEFAULT_SCHEMA
     from data.rag.retriever import retrieve
     from data.rag.explainer import explain
     from data.rag.build_embeddings import _connect
@@ -33,6 +36,9 @@ try:
     from data.collection_common import read_jsonl
 except ImportError:  # running from inside data/
     from rag.news_sentiment import records_from_documents, build_news_signals, AggregationConfig
+    from rag.fundamentals_signal import build_fundamentals_signals
+    from rag.load_sec_fundamentals import fetch as fetch_fundamentals
+    from rag.build_embeddings import DEFAULT_SCHEMA
     from rag.retriever import retrieve
     from rag.explainer import explain
     from rag.build_embeddings import _connect
@@ -52,6 +58,7 @@ OUTPUT = Path("data/artifacts/snapshots/snapshots.jsonl")
 # a noisy small negative can no longer force a false CAUTION. Lower the band to let weaker
 # forecasts count; raise it to trust the forecast less.
 NEUTRAL_RETURN_BAND = 0.5   # percent; |predicted 10-day return| below this is treated as noise
+FORECAST_BASIS = "development-fold estimate (experimental; XGBoost, 10-session horizon)"
 
 
 def placeholder_forecast(ticker: str) -> dict:
@@ -108,9 +115,33 @@ def load_forecasts(forecasts_arg: str | None) -> dict[str, dict]:
             forecasts[ticker] = {
                 "return_10d": ret, "lower": lower, "upper": upper,
                 "model_version": model_version or (row.get("model") or None),
-                "basis": "development-fold estimate (experimental; XGBoost, 10-session horizon)",
+                "basis": FORECAST_BASIS,
             }
     return forecasts
+
+
+def load_forecasts_from_db(conn) -> dict[str, dict]:
+    """Map ticker -> forecast dict (percent units) from the newest imported forecast batch.
+
+    Batches are written by backend/scripts/import_forecasts.py into the application tables.
+    "Newest" uses the dashboard's ordering (as_of, then generated_at), so stances and the
+    forecast panel describe the same batch. Returns {} when no batch has been imported.
+    """
+    with conn.cursor() as cur:
+        cur.execute("SELECT to_regclass('public.forecast_batches'), to_regclass('public.forecast_results')")
+        if None in cur.fetchone():
+            return {}
+        cur.execute("SELECT id, model FROM public.forecast_batches "
+                    "ORDER BY as_of DESC, generated_at DESC LIMIT 1")
+        batch = cur.fetchone()
+        if batch is None:
+            return {}
+        cur.execute("SELECT ticker, predicted_return_10d, lower_return, upper_return "
+                    "FROM public.forecast_results WHERE batch_id = %s", (batch[0],))
+        rows = cur.fetchall()
+    return {ticker.strip().upper(): {"return_10d": ret * 100, "lower": lower * 100, "upper": upper * 100,
+                                     "model_version": batch[1], "basis": FORECAST_BASIS}
+            for ticker, ret, lower, upper in rows}
 
 
 def _parse_dt(value):
@@ -167,7 +198,8 @@ def confident_signal_return(forecast: dict) -> tuple[float, bool]:
 
 
 def build_snapshot(profile: dict, risk_profile: str, news_signal: dict | None,
-                   evidence: list[dict], forecast: dict, as_of: datetime) -> dict:
+                   evidence: list[dict], forecast: dict, as_of: datetime,
+                   fundamentals_signal: dict | None = None) -> dict:
     """Assemble one RecommendationSnapshot (pure given its inputs)."""
     volatility = (profile.get("risk") or {}).get("volatility_1y")
     has_forecast = forecast.get("return_10d") is not None
@@ -181,7 +213,8 @@ def build_snapshot(profile: dict, risk_profile: str, news_signal: dict | None,
     # the base engine twice around it (baseline + news-aware), so news can still only add caution.
     signal = evaluate_signal(forecast_return=forecast_return, volatility=volatility,
                              risk_profile=risk_profile, prediction_interval_width=interval,
-                             forecast_lower_bound=lower_bound, news_signal=news_signal)
+                             forecast_lower_bound=lower_bound, news_signal=news_signal,
+                             fundamentals_signal=fundamentals_signal)
     if not has_forecast:
         signal["decision_trace"].insert(
             0, "Forecast pending: no saved 10-day forecast is available for this ticker; "
@@ -198,7 +231,8 @@ def build_snapshot(profile: dict, risk_profile: str, news_signal: dict | None,
         "asset_type": profile["asset_type"], "as_of": as_of.isoformat(),
         "forecast": forecast,
         "signal": {k: signal[k] for k in ("baseline_stance", "news_aware_stance", "provisional",
-                                          "decision_trace", "news_signal", "risk_profile")},
+                                          "decision_trace", "news_signal", "fundamentals_signal",
+                                          "risk_profile")},
         "evidence": evidence,
         "explanation": explanation,
     }
@@ -206,11 +240,12 @@ def build_snapshot(profile: dict, risk_profile: str, news_signal: dict | None,
 
 def assemble(conn, profiles: list[dict], marketaux_docs: list[dict], as_of: datetime, *,
              forecasts: dict[str, dict] | None = None, tiers=RISK_TIERS,
-             k: int = 3) -> tuple[list[dict], dict]:
+             k: int = 3, fundamentals_records: list[dict] | None = None) -> tuple[list[dict], dict]:
     forecasts = forecasts or {}
     eligible = [p for p in profiles if p.get("recommendation_eligible")]
     tickers = [p["ticker"] for p in eligible]
     news = build_news_signals(records_from_documents(marketaux_docs), tickers, as_of, NEWS_CONFIG)
+    fundamentals = build_fundamentals_signals(fundamentals_records or [], tickers, as_of)
     docs_by_ticker: dict[str, list[dict]] = {}
     for doc in marketaux_docs:
         for t in (doc.get("tickers") or []):
@@ -218,13 +253,15 @@ def assemble(conn, profiles: list[dict], marketaux_docs: list[dict], as_of: date
 
     snapshots: list[dict] = []
     coverage = {"eligible": len(eligible), "skipped_no_volatility": 0, "with_news": 0,
-                "with_evidence": 0, "with_forecast": 0}
+                "with_evidence": 0, "with_forecast": 0, "with_fundamentals": 0}
     for profile in eligible:
         if (profile.get("risk") or {}).get("volatility_1y") is None:
             coverage["skipped_no_volatility"] += 1
             continue
         news_signal = news.get(profile["ticker"])
         coverage["with_news"] += int(news_signal is not None)
+        fundamentals_signal = fundamentals.get(profile["ticker"])
+        coverage["with_fundamentals"] += int(fundamentals_signal is not None)
         # Evidence is independent of risk tier, so retrieve once per ticker. News leads (it is
         # readable and current); filings are supporting context, so fewer and after the news.
         # News comes straight from Marketaux (clean headlines + per-article sentiment); fall
@@ -242,7 +279,8 @@ def assemble(conn, profiles: list[dict], marketaux_docs: list[dict], as_of: date
         forecast = forecasts.get(profile["ticker"].strip().upper()) or placeholder_forecast(profile["ticker"])
         coverage["with_forecast"] += int(forecast.get("return_10d") is not None)
         for tier in tiers:
-            snapshots.append(build_snapshot(profile, tier, news_signal, evidence, forecast, as_of))
+            snapshots.append(build_snapshot(profile, tier, news_signal, evidence, forecast, as_of,
+                                            fundamentals_signal=fundamentals_signal))
     coverage["snapshots"] = len(snapshots)
     return snapshots, coverage
 
@@ -254,25 +292,39 @@ def main(argv=None) -> int:
     parser.add_argument("--marketaux", default="data/artifacts/marketaux/documents.jsonl")
     parser.add_argument("--forecasts", default=None,
                         help="Directory holding forecasts.csv + report.json, or the forecasts.csv "
-                             "itself. Defaults to the FORECAST_RESULTS_DIR env var. When absent, "
+                             "itself. Defaults to the FORECAST_RESULTS_DIR env var. When neither "
+                             "is set, the newest batch imported with backend/scripts/"
+                             "import_forecasts.py is read from the database; with none, "
                              "tickers fall back to a 'forecast pending' placeholder.")
+    parser.add_argument("--fundamentals", default=None,
+                        help="Local SEC facts.jsonl to use instead of the shared-data "
+                             "sec_fundamental_facts table (data/rag/load_sec_fundamentals.py).")
     parser.add_argument("--output", default=str(OUTPUT))
     parser.add_argument("--k", type=int, default=3)
     args = parser.parse_args(argv)
 
     profiles = json.loads(Path(args.profiles).read_text())
     marketaux_docs = read_jsonl(args.marketaux)
+    # A local export, when given, overrides the database batch (as in the backend).
     forecasts = load_forecasts(args.forecasts)
-    if not forecasts:
-        print("No saved forecasts found (set --forecasts or FORECAST_RESULTS_DIR); "
-              "using the 'forecast pending' placeholder for every ticker.")
     as_of = datetime.now(timezone.utc)
 
     import psycopg
     try:
         with _connect(args.env_file) as conn:
+            if not forecasts:
+                forecasts = load_forecasts_from_db(conn)
+            if not forecasts:
+                print("No saved forecasts found (import a batch with backend/scripts/import_forecasts.py "
+                      "or set --forecasts); using the 'forecast pending' placeholder for every ticker.")
+            fundamentals_records = (read_jsonl(args.fundamentals) if args.fundamentals
+                                    else fetch_fundamentals(conn, DEFAULT_SCHEMA))
+            if not fundamentals_records:
+                print("No SEC fundamentals found (load them with data/rag/load_sec_fundamentals.py "
+                      "or pass --fundamentals); the fundamentals check abstains for every ticker.")
             snapshots, coverage = assemble(conn, profiles, marketaux_docs, as_of,
-                                           forecasts=forecasts, k=args.k)
+                                           forecasts=forecasts, k=args.k,
+                                           fundamentals_records=fundamentals_records)
     except psycopg.Error:
         print("Database operation failed. Check connection settings and credentials.")
         return 1
@@ -285,6 +337,7 @@ def main(argv=None) -> int:
     print(f"Assembled {coverage['snapshots']} snapshots "
           f"({coverage['eligible']} eligible tickers x {len(RISK_TIERS)} tiers; "
           f"{coverage['with_forecast']} with a real forecast, {coverage['with_news']} with news, "
+          f"{coverage['with_fundamentals']} with SEC fundamentals, "
           f"{coverage['with_evidence']} with evidence, "
           f"{coverage['skipped_no_volatility']} skipped for missing volatility) -> {out}")
     return 0
