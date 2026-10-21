@@ -110,12 +110,11 @@ def evaluate_stock_stance(
              f"Risk profile '{user_risk_profile}' not recognised; "
              f"using {DEFAULT_PROFILE.title()} limits.")
 
-    # 2. Missing sentiment remains unavailable and cannot support EXPLORE
+    # 2. Missing sentiment remains unavailable and cannot support EXPLORE. The reason code
+    # records the gap; no trace line, so the UI says nothing when news is absent.
     if sentiment_score is None:
         sentiment = None
-        note("SENTIMENT_MISSING",
-             "Sentiment is unavailable. News coverage gap means no sentiment "
-             "evidence was used.")
+        codes.append("SENTIMENT_MISSING")
     else:
         sentiment = sentiment_score
 

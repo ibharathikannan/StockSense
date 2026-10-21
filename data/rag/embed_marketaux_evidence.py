@@ -7,12 +7,18 @@ table plus the shared `chunk_embeddings` table, and (re)creates a `rag_chunks` v
 `prepared_chunks` with `extra_chunks` so retrieval sees both corpora. The frozen tables are
 never modified.
 
+Each article's Marketaux per-ticker sentiment (`provider_sentiment`) and `available_at` are kept
+on `extra_chunks` too. The collector's JSONL lives on an ephemeral runner, so the database is
+the only place scores accumulate across nightly runs. The table is append-only: stored
+articles are never deleted or rewritten.
+
     python -m data.rag.embed_marketaux_evidence --env-file data/.env \
         --artifact data/artifacts/marketaux/documents.jsonl
 """
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import sys
 
@@ -36,6 +42,8 @@ def _ensure(conn, schema):
                    text         text
                )"""
         )
+        cur.execute("ALTER TABLE extra_chunks ADD COLUMN IF NOT EXISTS provider_sentiment jsonb")
+        cur.execute("ALTER TABLE extra_chunks ADD COLUMN IF NOT EXISTS available_at timestamptz")
         # Common columns across both corpora; form/section exist only on prepared_chunks.
         cur.execute(
             """CREATE OR REPLACE VIEW rag_chunks AS
@@ -48,6 +56,15 @@ def _ensure(conn, schema):
                FROM extra_chunks"""
         )
     conn.commit()
+
+
+def chunk_row(doc: dict) -> tuple:
+    """One extra_chunks row (column order of the INSERT in `run`) from a collector document."""
+    sentiment = doc.get("provider_sentiment")
+    return (doc["document_id"], doc["document_id"], doc.get("source_type", "news"),
+            doc.get("provider"), doc.get("title"), doc.get("source_url"),
+            doc.get("published_at"), doc.get("tickers"), doc.get("content_hash"), doc.get("text"),
+            json.dumps(sentiment) if sentiment else None, doc.get("available_at"))
 
 
 def run(conn, schema, artifact, batch_size):
@@ -72,13 +89,11 @@ def run(conn, schema, artifact, batch_size):
             cur.execute(f"SET search_path TO {schema}, public")
             cur.executemany(
                 """INSERT INTO extra_chunks (chunk_id, document_id, source_type, provider, title,
-                        source_url, published_at, tickers, content_hash, text)
-                   VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+                        source_url, published_at, tickers, content_hash, text,
+                        provider_sentiment, available_at)
+                   VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s::jsonb,%s)
                    ON CONFLICT (chunk_id) DO NOTHING""",
-                [(d["document_id"], d["document_id"], d.get("source_type", "news"),
-                  d.get("provider"), d.get("title"), d.get("source_url"),
-                  d.get("published_at"), d.get("tickers"), d.get("content_hash"), d.get("text"))
-                 for d in batch],
+                [chunk_row(d) for d in batch],
             )
             cur.executemany(
                 "INSERT INTO chunk_embeddings (chunk_id, embedding, model) "

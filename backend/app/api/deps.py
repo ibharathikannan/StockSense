@@ -13,6 +13,7 @@ from app.core.permissions import ADMIN_ROLE, effective_permissions
 from app.core.security import decode_access_token
 from app.repositories.assets import AssetsRepository
 from app.repositories.forecasts import ForecastRepository
+from app.repositories.news import NewsRepository
 from app.repositories.profiles import ProfilesRepository
 from app.repositories.recommendations import RecommendationsRepository
 from app.repositories.roles import RolesRepository
@@ -53,8 +54,10 @@ def get_recommendations_repo(db: asyncpg.Pool = Depends(get_db)) -> Recommendati
 
 def get_research_service(
     recs: RecommendationsRepository = Depends(get_recommendations_repo),
+    db: asyncpg.Pool = Depends(get_db),
+    settings: Settings = Depends(get_settings),
 ) -> ResearchService:
-    return ResearchService(recs)
+    return ResearchService(recs, NewsRepository(db, settings.shared_data_schema))
 
 
 def get_user_service(

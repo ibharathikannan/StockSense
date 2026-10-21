@@ -112,6 +112,13 @@ Runs as a **nightly end-of-day batch** (matches the proposal's end-of-day model)
 - The embedding step is **incremental** (`ON CONFLICT DO NOTHING` + a `LEFT JOIN` on missing
   rows), so a nightly run embeds only that day's ~hundreds of new articles, never the full
   corpus. The news-evidence index may be pruned (e.g. keep 90 days) if it needs capping.
+- **Postgres is the accumulating news store.** The collector's `documents.jsonl` lives on an
+  ephemeral runner, so step 3 also keeps each article's `provider_sentiment` and `available_at`
+  on `extra_chunks` (append-only; nothing stored is deleted or rewritten). The company detail
+  page reads the most recent news and sentiment from these tables directly. Step 4 reads the last 30 days of stored Marketaux articles back and merges
+  tonight's file over them, so the 7-day sentiment window spans several nights and survives a
+  failed collection or a manual assemble. "Recent news" evidence is the newest articles from
+  Marketaux and semantic retrieval combined.
 - Forecast and volatility are stable between model refreshes; only the news layer moves daily.
 
 ## Submission vs live

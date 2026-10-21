@@ -48,3 +48,17 @@ def test_collect_respects_request_budget(tmp_path, monkeypatch):
     assert cov["requests"] == 1
     statuses = [info["status"] for info in cov["symbols"].values()]
     assert statuses.count("skipped_budget") == 2
+
+
+def test_embedder_row_keeps_article_sentiment_for_later_nights():
+    import json as _json
+    from data.rag.embed_marketaux_evidence import chunk_row
+
+    doc = {"document_id": "news:marketaux:1", "provider": "marketaux", "title": "t",
+           "source_url": "u", "published_at": "2026-10-20T00:00:00Z", "tickers": ["AAPL"],
+           "content_hash": "h", "text": "x", "available_at": "2026-10-21T01:00:00Z",
+           "provider_sentiment": {"AAPL": {"score": 0.4, "relevance": 0.3}}}
+    row = chunk_row(doc)
+    assert _json.loads(row[10]) == doc["provider_sentiment"]
+    assert row[11] == "2026-10-21T01:00:00Z"
+    assert chunk_row({**doc, "provider_sentiment": None})[10] is None

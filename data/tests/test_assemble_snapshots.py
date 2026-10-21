@@ -143,3 +143,86 @@ def test_db_forecasts_absent_without_tables_or_batches():
     from data.rag.assemble_snapshots import load_forecasts_from_db
     assert load_forecasts_from_db(_Conn((None, None))) == {}
     assert load_forecasts_from_db(_Conn(("forecast_batches", "forecast_results"), None)) == {}
+
+
+# --- Marketaux news accumulated in the database ------------------------------------------
+
+def _ev(title, published, url=None, sentiment=None):
+    return {"title": title, "source_type": "news", "published_at": published,
+            "source_url": url or title, "snippet": "s", "sentiment": sentiment}
+
+
+def test_recent_news_takes_newest_across_sources_and_prefers_marketaux_copies():
+    from data.rag.assemble_snapshots import recent_news_evidence
+
+    marketaux = [_ev("mx-new", "2026-10-20T10:00:00Z", sentiment=0.4),
+                 _ev("shared", "2026-10-18T00:00:00Z", url="u1", sentiment=-0.2)]
+    retrieved = [_ev("old", "2026-09-23T00:00:00Z"), _ev("shared-copy", "2026-10-18T00:00:00Z", url="u1"),
+                 _ev("fresh-retrieved", "2026-10-21T00:00:00Z"), _ev("undated", None)]
+    out = recent_news_evidence(marketaux, retrieved, limit=3)
+    assert [e["title"] for e in out] == ["fresh-retrieved", "mx-new", "shared"]
+    assert out[2]["sentiment"] == -0.2
+
+
+def test_merge_documents_prefers_tonights_copy():
+    from data.rag.assemble_snapshots import merge_documents
+
+    stored = [{"document_id": "a", "provider_sentiment": None}, {"document_id": "b"}]
+    fresh = [{"document_id": "a", "provider_sentiment": {"AAPL": {"score": 0.3}}}]
+    merged = {d["document_id"]: d for d in merge_documents(stored, fresh)}
+    assert set(merged) == {"a", "b"}
+    assert merged["a"]["provider_sentiment"]["AAPL"]["score"] == 0.3
+
+
+class _NewsCursor:
+    def __init__(self, columns, rows):
+        self.columns, self.rows, self.result, self.queries = columns, rows, [], []
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *exc):
+        return False
+
+    def execute(self, sql, params=None):
+        self.queries.append((sql, params))
+        self.result = [(c,) for c in self.columns] if "information_schema" in sql else self.rows
+
+    def fetchall(self):
+        return self.result
+
+
+class _NewsConn:
+    def __init__(self, cursor):
+        self._cursor = cursor
+
+    def cursor(self):
+        return self._cursor
+
+
+def test_stored_marketaux_rows_feed_sentiment_and_evidence():
+    from data.rag.assemble_snapshots import load_marketaux_documents_from_db, marketaux_news_evidence
+    from data.rag.news_sentiment import records_from_documents
+
+    published = datetime(2026, 10, 8, 12, tzinfo=timezone.utc)
+    row = ("news:marketaux:abc", "Apple beats", "https://x/1", published, None, ["AAPL"], "h", "body",
+           '{"AAPL": {"score": 0.5, "relevance": 0.2}}')
+    cols = ["document_id", "provider", "provider_sentiment", "available_at"]
+    docs = load_marketaux_documents_from_db(_NewsConn(_NewsCursor(cols, [row])), AS_OF)
+    assert docs[0]["provider_id"] == "abc" and docs[0]["available_at"] == published.isoformat()
+    records = records_from_documents(docs)
+    assert len(records) == 1 and records[0].score == 0.5 and records[0].source == "marketaux"
+    ev = marketaux_news_evidence(docs, "AAPL", AS_OF)
+    assert ev[0]["title"] == "Apple beats" and ev[0]["sentiment"] == 0.5
+
+
+def test_stored_rows_without_sentiment_column_still_give_headlines():
+    from data.rag.assemble_snapshots import load_marketaux_documents_from_db
+
+    published = datetime(2026, 10, 8, tzinfo=timezone.utc)
+    cursor = _NewsCursor(["document_id", "provider"],
+                     [("news:marketaux:x", "Old row", "u", published, None, ["AAPL"], "h", "t", None)])
+    docs = load_marketaux_documents_from_db(_NewsConn(cursor), AS_OF)
+    assert docs[0]["provider_sentiment"] is None
+    assert "NULL::jsonb" in cursor.queries[-1][0]
+    assert load_marketaux_documents_from_db(_NewsConn(_NewsCursor([], [])), AS_OF) == []

@@ -39,6 +39,21 @@ class NewsSignal(BaseModel):
     article_count: int = 0
 
 
+class NewsSentiment(BaseModel):
+    """The most recent stored provider news sentiment for a ticker (display-only).
+
+    The mean provider score over the `lookback_days` ending at `as_of`, the newest scored
+    article. Marketaux scores accumulate nightly; Alpha Vantage aggregates are older and no
+    longer refreshed. It never moves the precomputed stance. Absent when nothing was scored.
+    """
+
+    score: float
+    source: Literal["marketaux", "alpha_vantage"]
+    as_of: datetime
+    article_count: int = 0
+    lookback_days: int = 7
+
+
 class FundamentalMetric(BaseModel):
     value: float
     assessment: Literal["strong", "neutral", "weak"]
@@ -128,6 +143,14 @@ class DiversificationNote(BaseModel):
     diversifying_tickers: list[str] = Field(default_factory=list)
 
 
+# Missing-news notes that older snapshots stored in their decision trace. The engine no longer
+# writes them (missing news shows nothing), so they are dropped from snapshots built before that.
+_RETIRED_TRACE_PREFIXES = (
+    "Sentiment is unavailable. News coverage gap",
+    "News-aware check abstained to the forecast-only stance",
+)
+
+
 class RecommendationSnapshot(BaseModel):
     """The single object every dashboard view reads.
 
@@ -146,6 +169,10 @@ class RecommendationSnapshot(BaseModel):
     evidence: list[Evidence] = Field(default_factory=list)
     explanation: Explanation
     diversification: Diversification | None = None
+    # Read from stored news at request time (company detail only), so they reflect the latest
+    # nightly collection even when the precomputed snapshot is older.
+    recent_news: list[Evidence] = Field(default_factory=list)
+    news_sentiment: NewsSentiment | None = None
 
     @classmethod
     def from_row(cls, row: dict[str, Any]) -> "RecommendationSnapshot":
@@ -166,7 +193,8 @@ class RecommendationSnapshot(BaseModel):
                 baseline_stance=row["baseline_stance"],
                 news_aware_stance=row["news_aware_stance"],
                 provisional=row.get("provisional", False),
-                decision_trace=detail.get("decision_trace", []),
+                decision_trace=[line for line in detail.get("decision_trace", [])
+                                if not line.startswith(_RETIRED_TRACE_PREFIXES)],
                 news_signal=NewsSignal(**(detail.get("news_signal") or {})),
                 fundamentals_signal=FundamentalsSignal(**(detail.get("fundamentals_signal") or {})),
                 risk_profile=row["risk_profile"],

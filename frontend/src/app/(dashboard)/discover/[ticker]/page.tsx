@@ -146,8 +146,11 @@ export default function CompanyDetailPage() {
   }
   if (!snap) return null;
 
-  const news = snap.evidence.filter((e) => e.source_type === "news");
+  // Prefer the newest stored articles; the snapshot's evidence is the fallback.
+  const news = snap.recent_news?.length ? snap.recent_news : snap.evidence.filter((e) => e.source_type === "news");
   const filings = snap.evidence.filter((e) => e.source_type === "sec");
+  const sentiment = snap.news_sentiment ?? null;
+  const sentimentBadge = sentiment ? sentimentFlag(sentiment.score) : null;
 
   return (
     <>
@@ -173,6 +176,23 @@ export default function CompanyDetailPage() {
         <Card className="p-5 lg:col-span-2">
           <h2 className="text-sm font-semibold">Why this signal</h2>
           <ReasonList lines={snap.signal.decision_trace} />
+          {sentiment && sentimentBadge && (
+            <div className="mt-4 border-t border-line pt-3 text-sm">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="font-medium">News sentiment</span>
+                <Badge tone={sentimentBadge.tone}>
+                  <sentimentBadge.Icon className="mr-1 size-3" aria-hidden />
+                  {sentimentBadge.label} ({sentiment.score >= 0 ? "+" : ""}
+                  {sentiment.score.toFixed(2)})
+                </Badge>
+              </div>
+              <p className="mt-1 text-xs text-muted">
+                {sentiment.source === "marketaux" ? "Marketaux" : "Alpha Vantage"} average of{" "}
+                {sentiment.article_count} articles over the {sentiment.lookback_days} days to{" "}
+                {sentiment.as_of.slice(0, 10)}. Shown for context; it does not change this signal.
+              </p>
+            </div>
+          )}
         </Card>
       </div>
 

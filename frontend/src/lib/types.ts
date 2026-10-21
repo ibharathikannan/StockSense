@@ -112,6 +112,15 @@ export interface NewsSignal {
   article_count: number;
 }
 
+/** Most recent stored provider news sentiment; display-only, never moves the stance. */
+export interface NewsSentiment {
+  score: number;
+  source: "marketaux" | "alpha_vantage";
+  as_of: string;
+  article_count: number;
+  lookback_days: number;
+}
+
 export interface FundamentalMetric {
   value: number;
   assessment: "strong" | "neutral" | "weak";
@@ -173,6 +182,9 @@ export interface RecommendationSnapshot {
   signal: Signal;
   evidence: Evidence[];
   explanation: Explanation;
+  /** Newest stored articles; only on the company detail response. */
+  recent_news?: Evidence[];
+  news_sentiment?: NewsSentiment | null;
 }
 
 export interface DiversificationNote {
