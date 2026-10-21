@@ -93,6 +93,8 @@ jobs:
             --resource-group "$PG_RESOURCE_GROUP" --server-name "$PG_SERVER_NAME" \
             --name "gha-nightly-${{ github.run_id }}" \
             --start-ip-address "$RUNNER_IP" --end-ip-address "$RUNNER_IP"
+          # Give Azure a moment to apply the rule before the pipeline connects.
+          sleep 20
 
       - name: Write environment files from secrets
         run: |
