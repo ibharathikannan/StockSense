@@ -54,9 +54,15 @@ jobs:
 
       - name: Install pipeline dependencies
         run: |
-          python -m pip install --upgrade pip
-          # RAG pipeline (torch/transformers/psycopg/pgvector) + backend loader (asyncpg).
-          pip install -r data/requirements-rag.txt -r backend/requirements.txt
+          # Two separate venvs, mirroring the local setup: the data stack and the backend
+          # loader pin different numpy versions (2.5.2 vs 2.3.5, the latter aligned with the
+          # XGBoost model), so they cannot share one environment.
+          python -m venv .venv-data
+          .venv-data/bin/pip install --upgrade pip
+          .venv-data/bin/pip install -r data/requirements-rag.txt
+          python -m venv .venv-backend
+          .venv-backend/bin/pip install --upgrade pip
+          .venv-backend/bin/pip install -r backend/requirements.txt
 
       - name: Azure login
         uses: azure/login@v2
@@ -96,8 +102,8 @@ jobs:
 
       - name: Run nightly refresh
         env:
-          DATA_PY: python          # single CI venv, not the local worktree venvs
-          BACKEND_PY: python
+          DATA_PY: ${{ github.workspace }}/.venv-data/bin/python       # data stack (torch, numpy 2.5.2)
+          BACKEND_PY: ${{ github.workspace }}/.venv-backend/bin/python  # loader (asyncpg, numpy 2.3.5)
           DATA_ENV_FILE: data/.env
           # FORECAST_RESULTS_DIR: set this (to a checked-out/mounted forecasts.csv dir) once the
           # XGBoost results are provisioned; until then snapshots use the forecast-pending fallback.
