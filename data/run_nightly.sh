@@ -42,7 +42,11 @@ cd "$REPO"
 echo "=== $(date -u +%FT%TZ) nightly refresh starting ==="
 
 echo "[1/4] collecting Marketaux news"
-"$DATA_PY" -m data.collect_marketaux_news --env-file "$DATA_ENV_FILE"
+# Best-effort: collection returns non-zero if any ticker request fails (e.g. the Marketaux
+# free-tier daily quota is exhausted). That must not abort the run — the rest of the pipeline
+# rebuilds snapshots from the news already embedded in the DB, so we log and continue.
+"$DATA_PY" -m data.collect_marketaux_news --env-file "$DATA_ENV_FILE" \
+  || echo "WARNING: news collection returned non-zero (Marketaux quota or API error); continuing with existing documents."
 
 echo "[2/4] embedding new news evidence"
 "$DATA_PY" -m data.rag.embed_marketaux_evidence --env-file "$DATA_ENV_FILE" \
