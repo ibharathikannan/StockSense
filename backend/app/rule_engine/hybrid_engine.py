@@ -34,7 +34,7 @@ from .rule_based_engine import evaluate_stock_stance, normalize_risk_profile
 # attribution diagnostic (docs/ai/SENTIMENT_ATTRIBUTION.md).
 TRUSTED_NEWS_SOURCES = {"alpha_vantage", "marketaux"}
 NEWS_MIN_ARTICLES = 2        # need at least this many recent articles to let news move the stance
-NEWS_RECENCY_HOURS = 72      # only sentiment this fresh may change the stance
+NEWS_RECENCY_HOURS = 168     # 7 days, matching the assembler window; MVP leniency
 FUNDAMENTALS_SOURCE = "sec_xbrl"
 FUNDAMENTALS_MIN_METRICS = 3
 FUNDAMENTALS_MAX_FILING_AGE_DAYS = 456   # older annual data may not move the stance
@@ -141,8 +141,6 @@ def evaluate_signal(
         stance, provisional = base["stance"], False
         trace = list(base["decision_trace"])
         codes = list(base.get("reason_codes", []))
-        trace.append("News-aware check abstained to the forecast-only stance: no eligible "
-                     "provider news coverage.")
     else:
         aware = evaluate_stock_stance(
             forecast_return, volatility, sentiment_score=score,

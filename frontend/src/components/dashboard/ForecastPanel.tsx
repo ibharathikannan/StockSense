@@ -56,7 +56,7 @@ export function ForecastPanel({ data }: { data: Dashboard }) {
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {forecasts.map((item) => (
               <div key={`${item.ticker}:${item.date}`} className="rounded-lg border border-line p-4">
-                <div className="flex flex-wrap items-center justify-between gap-2"><h3 className="text-sm font-semibold">{item.ticker}</h3>{item.stale_snapshot && <Badge tone="amber">Stale prices</Badge>}</div>
+                <h3 className="text-sm font-semibold">{item.ticker}</h3>
                 <p className="mt-1 text-xs text-muted">Origin {formatDate(item.date)} · Next {snapshot.horizon_sessions} trading sessions</p>
                 <dl className="mt-3 space-y-2 text-sm">
                   <div><dt className="text-xs text-muted">Predicted return</dt><dd className="text-xl font-semibold tabular-nums">{percent(item.predicted_return_10d)}</dd></div>
@@ -72,7 +72,7 @@ export function ForecastPanel({ data }: { data: Dashboard }) {
                   {item.assessment_status === "historical" && <p className="mt-2 text-xs text-muted">This assessment uses historical forecast or risk inputs and does not describe conditions today.</p>}
                   {item.assessment_status === "unavailable" && <p className="mt-2 text-xs text-muted">A research stance could not be assessed because required risk inputs are unavailable.</p>}
                   {(!item.assessment_status || item.assessment_status === "not_evaluated") && <p className="mt-2 text-xs text-muted">Research stance has not been evaluated for this forecast.</p>}
-                  {item.rule_inputs && <p className="mt-2 text-xs text-muted">Risk profile: {item.rule_inputs.user_risk_profile ?? "unavailable"}. Annual volatility: {item.rule_inputs.volatility === null ? "unavailable" : percent(item.rule_inputs.volatility)}{item.rule_inputs.volatility_as_of ? ` as of ${formatDate(item.rule_inputs.volatility_as_of)}` : ""}. {item.rule_inputs.sentiment_score === null ? "Sentiment is unavailable." : "Sentiment was included in the assessment."}</p>}
+                  {item.rule_inputs && <p className="mt-2 text-xs text-muted">Risk profile: {item.rule_inputs.user_risk_profile ?? "unavailable"}. Annual volatility: {item.rule_inputs.volatility === null ? "unavailable" : percent(item.rule_inputs.volatility)}{item.rule_inputs.volatility_as_of ? ` as of ${formatDate(item.rule_inputs.volatility_as_of)}` : ""}.{item.rule_inputs.sentiment_score !== null && " Sentiment was included in the assessment."}</p>}
                   {!!item.decision_trace?.length && <details className="mt-2 text-xs"><summary className="cursor-pointer rounded text-muted focus-visible:outline-2 focus-visible:outline-brand-500">Why this stance?</summary><ul className="mt-2 list-disc space-y-1 pl-4 text-muted">{item.decision_trace.map((reason, index) => <li key={`${index}:${reason}`}>{reason}</li>)}</ul></details>}
                 </div>
                 <p className="mt-3 text-xs text-muted">Data age: {item.data_age_calendar_days} calendar days. Calibration outcomes through {formatDate(item.calibration_latest_outcome)}.</p>

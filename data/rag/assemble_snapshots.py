@@ -21,7 +21,7 @@ import argparse
 import csv
 import json
 import os
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 try:
@@ -57,6 +57,9 @@ OUTPUT = Path("data/artifacts/snapshots/snapshots.jsonl")
 # still shown in the forecast panel, and the interval still drives the uncertainty caveats, but
 # a noisy small negative can no longer force a false CAUTION. Lower the band to let weaker
 # forecasts count; raise it to trust the forecast less.
+# Marketaux articles accumulated in the database (extra_chunks) are read back this far, so the
+# 7-day sentiment window and "Recent news" do not depend on one night's runner-local JSONL.
+MARKETAUX_DB_LOOKBACK_DAYS = 30
 NEUTRAL_RETURN_BAND = 0.5   # percent; |predicted 10-day return| below this is treated as noise
 FORECAST_BASIS = "development-fold estimate (experimental; XGBoost, 10-session horizon)"
 
@@ -180,6 +183,64 @@ def marketaux_news_evidence(docs: list[dict], ticker: str, as_of: datetime, limi
     return [evidence for _, evidence in items[:limit]]
 
 
+def load_marketaux_documents_from_db(conn, as_of: datetime, schema: str = DEFAULT_SCHEMA,
+                                     lookback_days: int = MARKETAUX_DB_LOOKBACK_DAYS) -> list[dict]:
+    """Marketaux articles the nightly embedder stored in `extra_chunks`, in the collector's
+    document shape. Rows stored before sentiment was persisted come back without
+    `provider_sentiment`: they still serve as headlines but never as sentiment."""
+    with conn.cursor() as cur:
+        cur.execute("SELECT column_name FROM information_schema.columns "
+                    "WHERE table_schema = %s AND table_name = 'extra_chunks'", (schema,))
+        columns = {row[0] for row in cur.fetchall()}
+        if not columns:
+            return []
+        sentiment = "provider_sentiment" if "provider_sentiment" in columns else "NULL::jsonb"
+        available = "available_at" if "available_at" in columns else "NULL::timestamptz"
+        cur.execute(
+            f"""SELECT document_id, title, source_url, published_at, {available}, tickers,
+                       content_hash, text, {sentiment}
+                FROM "{schema}".extra_chunks
+                WHERE provider = 'marketaux' AND published_at > %s AND published_at <= %s""",
+            (as_of - timedelta(days=lookback_days), as_of),
+        )
+        rows = cur.fetchall()
+    docs = []
+    for document_id, title, url, published, available, tickers, content_hash, text, ps in rows:
+        if isinstance(ps, str):
+            ps = json.loads(ps)
+        docs.append({
+            "document_id": document_id, "source_type": "news", "provider": "marketaux",
+            "provider_id": document_id.rsplit(":", 1)[-1], "title": title or "",
+            "source_url": url or "", "published_at": published.isoformat(),
+            "available_at": (available or published).isoformat(), "tickers": list(tickers or []),
+            "content_hash": content_hash or "", "text": text or "", "provider_sentiment": ps,
+        })
+    return docs
+
+
+def merge_documents(stored: list[dict], fresh: list[dict]) -> list[dict]:
+    """Union by document_id; tonight's collector documents win over stored copies."""
+    merged = {doc["document_id"]: doc for doc in stored}
+    merged.update({doc["document_id"]: doc for doc in fresh})
+    return list(merged.values())
+
+
+def recent_news_evidence(marketaux: list[dict], retrieved: list[dict], limit: int = 3) -> list[dict]:
+    """The most recent news from either source, newest first. Marketaux copies are listed first
+    so they win duplicates and same-time ties (they carry the article's own sentiment)."""
+    items, seen = [], set()
+    for ev in marketaux + retrieved:
+        key = ev.get("source_url") or ev.get("title")
+        if key in seen:
+            continue
+        seen.add(key)
+        items.append(ev)
+    oldest = datetime.min.replace(tzinfo=timezone.utc)
+    items.sort(key=lambda ev: _parse_dt(ev["published_at"]) if ev.get("published_at") else oldest,
+               reverse=True)
+    return items[:limit]
+
+
 def confident_signal_return(forecast: dict) -> tuple[float, bool]:
     """The return value fed to the engine, and whether the forecast is directionally confident.
 
@@ -264,14 +325,16 @@ def assemble(conn, profiles: list[dict], marketaux_docs: list[dict], as_of: date
         coverage["with_fundamentals"] += int(fundamentals_signal is not None)
         # Evidence is independent of risk tier, so retrieve once per ticker. News leads (it is
         # readable and current); filings are supporting context, so fewer and after the news.
-        # News comes straight from Marketaux (clean headlines + per-article sentiment); fall
-        # back to semantic news retrieval only when Marketaux has nothing for this ticker.
-        news_ev = marketaux_news_evidence(docs_by_ticker.get(profile["ticker"], []),
-                                          profile["ticker"], as_of, limit=3)
-        if not news_ev:
-            news_ev = retrieve(conn, f"{profile['name']} latest news and developments",
-                               tickers=[profile["ticker"]], as_of=as_of, source_types=["news"],
-                               k=3, min_similarity=0.25)
+        # "Recent news" is the newest articles from Marketaux (clean headlines + per-article
+        # sentiment) and semantic news retrieval combined, so stale retrieval hits never hide
+        # fresher Marketaux coverage.
+        news_ev = recent_news_evidence(
+            marketaux_news_evidence(docs_by_ticker.get(profile["ticker"], []),
+                                    profile["ticker"], as_of, limit=3),
+            retrieve(conn, f"{profile['name']} latest news and developments",
+                     tickers=[profile["ticker"]], as_of=as_of, source_types=["news"],
+                     k=3, min_similarity=0.25),
+            limit=3)
         sec_ev = retrieve(conn, f"{profile['name']} business risks and financial results",
                           tickers=[profile["ticker"]], as_of=as_of, source_types=["sec"], k=2)
         evidence = news_ev + sec_ev
@@ -312,6 +375,10 @@ def main(argv=None) -> int:
     import psycopg
     try:
         with _connect(args.env_file) as conn:
+            stored_docs = load_marketaux_documents_from_db(conn, as_of)
+            marketaux_docs = merge_documents(stored_docs, marketaux_docs)
+            print(f"Marketaux articles: {len(marketaux_docs)} "
+                  f"({len(stored_docs)} stored in the last {MARKETAUX_DB_LOOKBACK_DAYS} days).")
             if not forecasts:
                 forecasts = load_forecasts_from_db(conn)
             if not forecasts:

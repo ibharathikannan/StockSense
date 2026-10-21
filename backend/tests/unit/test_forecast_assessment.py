@@ -62,7 +62,7 @@ def test_real_engine_cautions_for_risk_mismatch_and_preserves_missing_sentiment(
     assert item.stance=='CAUTION'
     assert item.rule_inputs.sentiment_score is None
     assert any('Risk mismatch' in line for line in item.decision_trace)
-    assert any('Sentiment is unavailable' in line for line in item.decision_trace)
+    assert not any('Sentiment' in line for line in item.decision_trace)
     assert not any('defaulted to neutral' in line for line in item.decision_trace)
 
 

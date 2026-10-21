@@ -50,6 +50,10 @@ class Settings(BaseSettings):
     def _empty_forecast_directory(cls, value):
         return None if isinstance(value, str) and not value.strip() else value
 
+    # Shared offline-data schema (see data/SHARED_DATA.md) holding the stored news articles and
+    # news sentiment shown on the company detail page; read-only.
+    shared_data_schema: str = Field("ss_ef82d22e57e68952a418", pattern=r"^[A-Za-z_][A-Za-z0-9_]{0,62}$")
+
     # Suggestions returned by GET /api/recommendations when the request has no ?limit=.
     recommendations_limit: int = Field(10, ge=1, le=MAX_RECOMMENDATIONS)
 
