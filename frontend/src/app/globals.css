@@ -2,15 +2,17 @@
 
 /* Theme tokens — restyle the whole app by changing these. */
 @theme {
-  --color-brand-50: #eff6ff;
-  --color-brand-100: #dbeafe;
+  --color-brand-50: #eff5ff;
+  --color-brand-100: #dbe8fe;
+  --color-brand-200: #bfd5fe;
+  --color-brand-400: #5b8def;
   --color-brand-500: #2563eb;
   --color-brand-600: #1d4ed8;
   --color-brand-700: #1e40af;
 
-  --color-sidebar: #0b1f3a;
-  --color-sidebar-hover: #132e52;
-  --color-sidebar-active: #1a3d6b;
+  --color-sidebar: #0a1b33;
+  --color-sidebar-hover: #12294a;
+  --color-sidebar-active: #173561;
 
   /* Market colours: use for price/percentage changes and up/down indicators. */
   --color-gain: #059669;
@@ -24,14 +26,20 @@
   --color-chart-within: #0ca30c;
   --color-chart-over-limit: #fab219;
 
+  /* Neutrals. `muted` keeps >= 4.5:1 on both the white surface and the canvas. */
   --color-surface: #ffffff;
-  --color-canvas: #f3f6fb;
-  --color-line: #e3e8ef;
-  --color-ink: #16202f;
-  --color-muted: #64748b;
+  --color-canvas: #f5f7fb;
+  --color-line: #e2e8f0;
+  --color-ink: #0f172a;
+  --color-muted: #5b6b80;
+
+  /* Elevation: one quiet card shadow, one for floating menus. */
+  --shadow-card: 0 1px 2px rgb(15 23 42 / 0.04), 0 1px 3px rgb(15 23 42 / 0.05);
+  --shadow-pop: 0 10px 30px -8px rgb(15 23 42 / 0.25), 0 2px 6px rgb(15 23 42 / 0.08);
 
   --animate-fade-in: fade-in 0.2s ease-out both;
   --animate-fade-in-up: fade-in-up 0.25s ease-out both;
+  --animate-pop-in: pop-in 0.14s ease-out both;
 
   @keyframes fade-in {
     from {
@@ -51,6 +59,16 @@
       transform: none;
     }
   }
+  @keyframes pop-in {
+    from {
+      opacity: 0;
+      transform: translateY(-4px) scale(0.98);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
 
   --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
@@ -64,4 +82,29 @@ body {
   background: var(--color-canvas);
   color: var(--color-ink);
   font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* One consistent keyboard focus ring everywhere (components can still override it). */
+:focus-visible {
+  outline: 2px solid var(--color-brand-500);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: var(--color-brand-100);
+  color: var(--color-ink);
+}
+
+/* Slim scrollbars for the sidebar and scrollable tables. */
+.scroll-thin {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(148 163 184 / 0.4) transparent;
+}
+
+/* The app's PasswordInput has its own show/hide toggle; hide Edge's built-in one so it doesn't show twice. */
+input::-ms-reveal,
+input::-ms-clear {
+  display: none;
 }

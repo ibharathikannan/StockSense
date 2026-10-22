@@ -21,14 +21,14 @@ function Tile({
   return (
     <Card className="flex flex-col p-5">
       <div className="flex items-start justify-between gap-3">
-        <p className="text-sm text-muted">{label}</p>
-        <span className="flex size-8 items-center justify-center rounded-lg bg-brand-50 text-brand-600" aria-hidden>
-          <Icon className="size-4" />
+        <p className="text-[13px] font-medium text-muted">{label}</p>
+        <span className="flex size-9 items-center justify-center rounded-lg bg-brand-50 text-brand-600 ring-1 ring-brand-100 ring-inset" aria-hidden>
+          <Icon className="size-[18px]" />
         </span>
       </div>
-      <p className="mt-1 text-2xl font-semibold tracking-tight">{value}</p>
-      {children && <div className="mt-3">{children}</div>}
-      <p className="mt-auto pt-2 text-xs text-muted">{caption}</p>
+      <p className="mt-2 text-[1.75rem] leading-tight font-semibold tracking-tight tabular-nums">{value}</p>
+      {children && <div className="mt-3.5">{children}</div>}
+      <p className="mt-auto pt-3 text-xs leading-relaxed text-muted">{caption}</p>
     </Card>
   );
 }

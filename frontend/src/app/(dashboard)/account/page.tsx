@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Alert, Badge, Button, Card, Field, Input, PageHeader } from "@/components/ui";
+import { Alert, Badge, Button, Card, Field, PageHeader, PasswordInput } from "@/components/ui";
 import { errorMessage } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { formatDateTime } from "@/lib/format";
@@ -63,13 +63,13 @@ export default function AccountSettingsPage() {
             {error && <Alert>{error}</Alert>}
             {done && <Alert tone="success">Password updated.</Alert>}
             <Field label="Current password" htmlFor="current">
-              <Input id="current" type="password" autoComplete="current-password" required value={current} onChange={(e) => setCurrent(e.target.value)} />
+              <PasswordInput id="current" autoComplete="current-password" required value={current} onChange={(e) => setCurrent(e.target.value)} />
             </Field>
             <Field label="New password" htmlFor="next" hint="At least 8 characters.">
-              <Input id="next" type="password" autoComplete="new-password" required minLength={8} value={next} onChange={(e) => setNext(e.target.value)} />
+              <PasswordInput id="next" autoComplete="new-password" required minLength={8} value={next} onChange={(e) => setNext(e.target.value)} />
             </Field>
             <Field label="Confirm new password" htmlFor="confirm">
-              <Input id="confirm" type="password" autoComplete="new-password" required value={confirm} onChange={(e) => setConfirm(e.target.value)} />
+              <PasswordInput id="confirm" autoComplete="new-password" required value={confirm} onChange={(e) => setConfirm(e.target.value)} />
             </Field>
             <Button type="submit" loading={saving}>
               Update password

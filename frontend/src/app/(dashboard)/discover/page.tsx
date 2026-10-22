@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { Alert, Badge, Card, PageHeader, PageLoader } from "@/components/ui";
+import { SearchX } from "lucide-react";
+import { Alert, Badge, Card, EmptyState, LinkButton, PageHeader, PageLoader } from "@/components/ui";
+import { TickerMark } from "@/components/dashboard/shared";
 import { StanceBadge, forecastLabel, stanceBlurb } from "@/components/recommendations";
 import { errorMessage } from "@/lib/api";
 import { useFetch } from "@/lib/hooks";
@@ -11,20 +13,21 @@ import type { RecommendationSnapshot } from "@/lib/types";
 function CandidateCard({ snap }: { snap: RecommendationSnapshot }) {
   const reason = snap.signal.decision_trace[0] ?? stanceBlurb(snap.signal.news_aware_stance);
   return (
-    <Link href={`/discover/${snap.ticker}`} className="block">
-      <Card className="h-full p-5 transition-shadow hover:shadow-md">
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <p className="font-semibold">{snap.ticker}</p>
+    <Link href={`/discover/${snap.ticker}`} className="group block rounded-xl focus-visible:outline-offset-4">
+      <Card className="flex h-full flex-col p-5 transition-all duration-150 group-hover:-translate-y-0.5 group-hover:border-brand-200 group-hover:shadow-md motion-reduce:transition-none motion-reduce:group-hover:translate-y-0">
+        <div className="flex items-start gap-3">
+          <TickerMark ticker={snap.ticker} />
+          <div className="min-w-0 flex-1">
+            <p className="font-semibold tracking-tight">{snap.ticker}</p>
             <p className="truncate text-sm text-muted">{snap.name}</p>
           </div>
           <StanceBadge stance={snap.signal.news_aware_stance} provisional={snap.signal.provisional} />
         </div>
-        <div className="mt-3 flex flex-wrap gap-2">
+        <p className="mt-4 line-clamp-2 flex-1 text-sm leading-relaxed text-muted">{reason}</p>
+        <div className="mt-4 flex flex-wrap items-center gap-2 border-t border-line pt-4">
           <Badge tone="neutral">{snap.sector}</Badge>
-          <Badge tone="neutral">{forecastLabel(snap.forecast)}</Badge>
+          <span className="text-xs text-muted tabular-nums">{forecastLabel(snap.forecast)}</span>
         </div>
-        <p className="mt-3 line-clamp-2 text-sm text-muted">{reason}</p>
       </Card>
     </Link>
   );
@@ -51,9 +54,14 @@ export default function DiscoverPage() {
       )}
 
       {data && data.candidates.length === 0 ? (
-        <Card className="p-6 text-sm text-muted">
-          No matches for your current interests yet. Try broadening them on your{" "}
-          <Link href="/profile" className="text-brand-600 underline">profile</Link>.
+        <Card>
+          <EmptyState
+            icon={SearchX}
+            title="No matches for your interests yet"
+            action={<LinkButton href="/profile" variant="secondary">Update your profile</LinkButton>}
+          >
+            We couldn&apos;t find research candidates for your current interests. Try broadening them on your profile.
+          </EmptyState>
         </Card>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">

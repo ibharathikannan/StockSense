@@ -5,10 +5,10 @@ import { APP_NAME } from "@/lib/config";
 export function Logo({ className = "" }: { className?: string }) {
   return (
     <span className={`inline-flex items-center gap-2.5 ${className}`}>
-      <span className="flex size-8 items-center justify-center rounded-lg bg-brand-500 text-white">
+      <span className="flex size-8 items-center justify-center rounded-lg bg-brand-500 text-white shadow-sm ring-1 ring-white/15 ring-inset">
         <TrendingUp className="size-[18px]" strokeWidth={2.5} aria-hidden />
       </span>
-      <span className="text-lg font-semibold tracking-tight">{APP_NAME}</span>
+      <span className="text-[1.05rem] font-semibold tracking-tight">{APP_NAME}</span>
     </span>
   );
 }
