@@ -2,11 +2,11 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { Pencil, Plus, Search, Trash2 } from "lucide-react";
+import { Pencil, Plus, Search, SearchX, Trash2 } from "lucide-react";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { Pagination } from "@/components/Pagination";
 import { RequirePermission } from "@/components/RequirePermission";
-import { Alert, Badge, Card, Input, LinkButton, PageHeader, TableSkeleton, Table, Td, Th } from "@/components/ui";
+import { Alert, Avatar, Badge, Card, EmptyState, Input, LinkButton, PageHeader, TableSkeleton, Table, Td, Th } from "@/components/ui";
 import { errorMessage } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 import { formatDateTime } from "@/lib/format";
@@ -95,8 +95,13 @@ function UsersTable() {
                 {data.items.map((u) => (
                   <tr key={u.id}>
                     <Td>
-                      <p className="font-medium">{u.full_name}</p>
-                      <p className="text-xs text-muted">{u.email}</p>
+                      <div className="flex items-center gap-3">
+                        <Avatar name={u.full_name} />
+                        <div className="min-w-0">
+                          <p className="truncate font-medium">{u.full_name}</p>
+                          <p className="truncate text-xs text-muted">{u.email}</p>
+                        </div>
+                      </div>
                     </Td>
                     <Td>
                       <Badge tone={u.role === "admin" ? "brand" : "neutral"}>{u.role}</Badge>
@@ -130,8 +135,10 @@ function UsersTable() {
                 ))}
                 {data.items.length === 0 && (
                   <tr>
-                    <Td colSpan={5} className="py-10 text-center text-muted">
-                      No users found.
+                    <Td colSpan={5} className="p-0">
+                      <EmptyState icon={SearchX} title="No users found">
+                        Try a different name or email.
+                      </EmptyState>
                     </Td>
                   </tr>
                 )}

@@ -153,7 +153,7 @@ function Form({ options, existing }: { options: ProfileOptions; existing: Profil
                   <label
                     key={a.key}
                     className={`cursor-pointer rounded-md px-3.5 py-1.5 text-sm font-medium transition-colors has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-brand-500 ${
-                      selected ? "bg-brand-500 text-white" : "text-muted hover:text-ink"
+                      selected ? "bg-brand-600 text-white shadow-sm" : "text-muted hover:text-ink"
                     }`}
                   >
                     <input type="radio" name="asset_types" value={a.key} checked={selected} onChange={() => setAssetTypes(a.key)} className="sr-only" />

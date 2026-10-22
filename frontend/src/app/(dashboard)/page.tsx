@@ -1,6 +1,6 @@
 "use client";
 
-import { Compass, SlidersHorizontal } from "lucide-react";
+import { ArrowRight, Compass, SlidersHorizontal } from "lucide-react";
 import { ForecastPanel } from "@/components/dashboard/ForecastPanel";
 import { DashboardTiles } from "@/components/dashboard/DashboardTiles";
 import { RiskCheckChart } from "@/components/dashboard/RiskCheckChart";
@@ -14,6 +14,9 @@ import { useFetch } from "@/lib/hooks";
 import { useProfile } from "@/lib/profile";
 import type { Dashboard } from "@/lib/types";
 import { dashboardService } from "@/services/dashboard";
+
+/** More interest chips than this collapse into a "+N more" chip. */
+const MAX_INTEREST_CHIPS = 4;
 
 const ASSET_TYPE_LABELS: Record<string, string> = {
   both: "Stocks & ETFs",
@@ -37,17 +40,22 @@ export default function DashboardPage() {
     <>
       <Header firstName={firstName} data={dashboard.data} />
 
-      <Card className="mb-6 flex flex-wrap items-center justify-between gap-4 bg-brand-50 p-6">
-        <div className="flex items-start gap-3">
-          <Compass className="mt-0.5 size-6 text-brand-600" aria-hidden />
+      <Card className="mb-8 flex flex-wrap items-center justify-between gap-4 border-brand-100 bg-gradient-to-r from-brand-50 via-white to-white p-5 sm:p-6">
+        <div className="flex items-start gap-4">
+          <span className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-brand-600 text-white shadow-sm" aria-hidden>
+            <Compass className="size-5" />
+          </span>
           <div>
             <h2 className="font-semibold">Your research set is ready</h2>
-            <p className="mt-1 text-sm text-muted">
+            <p className="mt-1 max-w-xl text-sm text-muted">
               Explore personalised, explainable signals — Explore / Monitor / Caution — with the reasons behind each.
             </p>
           </div>
         </div>
-        <LinkButton href="/discover">Go to Discover</LinkButton>
+        <LinkButton href="/discover">
+          Go to Discover
+          <ArrowRight className="size-4" aria-hidden />
+        </LinkButton>
       </Card>
 
       {dashboard.error ? (
@@ -97,39 +105,35 @@ function Header({
   data?: Dashboard;
 }) {
   return (
-    <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">
+    <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
+      <div className="min-w-0">
+        <h1 className="text-[1.65rem] leading-tight font-semibold tracking-tight">
           Welcome back, {firstName}
         </h1>
 
         {data ? (
-          <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-muted">
-            <span>Your interests</span>
+          <>
+            <p className="mt-1.5 text-sm text-muted">
+              {data.risk_level.label} risk level · {ASSET_TYPE_LABELS[data.asset_types] ?? data.asset_types}
+              {data.prices_as_of && <> · Prices up to {formatDate(data.prices_as_of)}</>}
+            </p>
 
-            {data.interests.map((interest) => (
-              <Badge key={interest.key} tone="brand">
-                {interest.label}
-              </Badge>
-            ))}
-
-            <span aria-hidden>·</span>
-
-            <span>
-              {ASSET_TYPE_LABELS[data.asset_types] ?? data.asset_types}
-            </span>
-
-            {data.prices_as_of && (
-              <>
-                <span aria-hidden>·</span>
-                <span>
-                  Prices up to {formatDate(data.prices_as_of)}
+            <div className="mt-3 flex flex-wrap items-center gap-1.5">
+              <span className="mr-1 text-xs font-medium text-muted">Interests</span>
+              {data.interests.slice(0, MAX_INTEREST_CHIPS).map((interest) => (
+                <Badge key={interest.key} tone="brand">
+                  {interest.label}
+                </Badge>
+              ))}
+              {data.interests.length > MAX_INTEREST_CHIPS && (
+                <span title={data.interests.slice(MAX_INTEREST_CHIPS).map((i) => i.label).join(", ")}>
+                  <Badge>+{data.interests.length - MAX_INTEREST_CHIPS} more</Badge>
                 </span>
-              </>
-            )}
-          </div>
+              )}
+            </div>
+          </>
         ) : (
-          <p className="mt-1 text-sm text-muted">
+          <p className="mt-1.5 text-sm text-muted">
             Your research overview.
           </p>
         )}

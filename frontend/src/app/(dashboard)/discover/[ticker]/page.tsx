@@ -162,9 +162,10 @@ export default function CompanyDetailPage() {
       />
 
       {/* Plain-English takeaway */}
-      <Card className={`mb-6 p-5 ${takeawayTint[snap.signal.news_aware_stance]}`}>
+      {/* A plain box, not <Card>: Card's own white background would override the stance tint. */}
+      <div className={`mb-6 rounded-xl border p-5 ${takeawayTint[snap.signal.news_aware_stance]}`}>
         <p className="text-sm font-medium leading-relaxed text-ink">{takeaway(snap)}</p>
-      </Card>
+      </div>
 
       <div className="grid gap-6 lg:grid-cols-3">
         <Card className="p-5">

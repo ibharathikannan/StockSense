@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { AuthLayout } from "@/components/AuthLayout";
 import { Logo } from "@/components/Logo";
-import { Alert, Button, Field, Input } from "@/components/ui";
+import { Alert, Button, Field, Input, PasswordInput } from "@/components/ui";
 import { errorMessage } from "@/lib/api";
 import { useAuth } from "@/lib/auth";
 
@@ -46,8 +46,8 @@ export default function RegisterPage() {
     <AuthLayout>
       <div className="w-full max-w-sm">
         <Logo className="mb-8 text-ink lg:hidden" />
-        <h1 className="text-2xl font-semibold tracking-tight">Create your account</h1>
-        <p className="mt-1 mb-6 text-sm text-muted">Start researching stocks and ETFs in a minute.</p>
+        <h1 className="text-[1.75rem] leading-tight font-semibold tracking-tight">Create your account</h1>
+        <p className="mt-2 mb-8 text-sm text-muted">Start researching stocks and ETFs in a minute.</p>
 
         <form onSubmit={onSubmit} className="space-y-4">
           {error && <Alert>{error}</Alert>}
@@ -66,9 +66,8 @@ export default function RegisterPage() {
             <Input id="email" type="email" autoComplete="username" required value={email} onChange={(e) => setEmail(e.target.value)} />
           </Field>
           <Field label="Password" htmlFor="password" hint="At least 8 characters.">
-            <Input
+            <PasswordInput
               id="password"
-              type="password"
               autoComplete="new-password"
               required
               minLength={8}
@@ -77,16 +76,15 @@ export default function RegisterPage() {
             />
           </Field>
           <Field label="Confirm password" htmlFor="confirm">
-            <Input
+            <PasswordInput
               id="confirm"
-              type="password"
               autoComplete="new-password"
               required
               value={confirm}
               onChange={(e) => setConfirm(e.target.value)}
             />
           </Field>
-          <Button type="submit" className="w-full" loading={submitting}>
+          <Button type="submit" className="min-h-11 w-full" loading={submitting}>
             Create account
           </Button>
         </form>
