@@ -340,6 +340,19 @@ python3 -m pytest -q data/tests
 These tests use temporary fixture data and mocked provider requests. They do
 not access MongoDB, consume API quota, or run the independent data gate.
 
+### RAG evaluation
+
+Install `data/requirements-rag.txt`, then run either read-only evaluation (reports go
+to the ignored `data/artifacts/evaluation/rag/`):
+
+```bash
+python -m data.evaluation.rag_eval generation                        # faithfulness of snapshot explanations (offline)
+python -m data.evaluation.rag_eval retrieval --env-file data/.env    # precision@k, recall@k, context relevance (shared DB)
+```
+
+The first run downloads two small local cross-encoders from Hugging Face. See
+`docs/ai/RAG_EVAL.md` for method and results.
+
 ## 7. Shared data: Azure PostgreSQL
 
 Import canonical Parquet datasets into numeric SQL tables, and prepared SEC/news
