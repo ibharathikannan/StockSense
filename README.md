@@ -251,6 +251,7 @@ Each member's individual report (personal contribution, most useful learning and
 | [`SENTIMENT_ATTRIBUTION.md`](docs/ai/SENTIMENT_ATTRIBUTION.md) | Why some news sentiment was attributed to the wrong ticker, and why news-aware signals abstain where coverage is thin |
 | [`OPERATIONAL_MODEL.md`](docs/ai/OPERATIONAL_MODEL.md) | How the nightly batch, the signal and the RAG explanations fit together |
 | [`PLAN.md`](docs/ai/PLAN.md) | Work plan and decisions, such as adding SEC fundamentals to the hybrid engine |
+| [`RULE_ENGINE_GATE.md`](docs/ai/RULE_ENGINE_GATE.md) | Rule engine evaluation: accuracy against the written rules, consistency and decision trace completeness |
 
 ### notebooks — research and experiments
 
