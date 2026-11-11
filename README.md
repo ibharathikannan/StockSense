@@ -2,7 +2,7 @@
 
 **Explainable stock research for beginner investors.** StockSense helps new investors discover US stocks and ETFs that match their interests and risk level, and explains *why* with plain-English reasons. It is a research and learning tool: it never gives buy or sell instructions.
 
-- **Live site:** https://stocksenseapp.azurewebsites.net/
+- **Live site:** https://stocksense-g13.azurewebsites.net/
 - **Stack:** Next.js and React · FastAPI (Python) · PostgreSQL (Azure Database for PostgreSQL) · one Docker container on an Azure Web App
 
 <img src="docs/screenshots/stocksense-overview.png" alt="StockSense dashboard: profile summary, risk check, sector spread, suggestions with reasons and watchlist" />
